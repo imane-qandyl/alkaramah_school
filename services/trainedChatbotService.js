@@ -11,6 +11,7 @@ class TrainedChatbotService {
     // Use localhost for local development
     this.serverUrl = 'http://localhost:5001';
     this.isAvailable = false;
+    this.hasLoggedUnavailable = false; // Prevent spam logging
     this.checkServerAvailability();
   }
 
@@ -21,17 +22,23 @@ class TrainedChatbotService {
     try {
       const response = await fetch(`${this.serverUrl}/health`, {
         method: 'GET',
-        timeout: 3000
+        timeout: 2000 // Reduced timeout for faster fallback
       });
       
       if (response.ok) {
         const data = await response.json();
         this.isAvailable = data.chatbot_loaded;
-        console.log('Trained chatbot server status:', data);
+        if (this.isAvailable) {
+          console.log('✅ Trained chatbot server is available');
+        }
       }
     } catch (error) {
       this.isAvailable = false;
-      console.log('Trained chatbot server not available:', error.message);
+      // Only log once to avoid spam
+      if (!this.hasLoggedUnavailable) {
+        console.log('ℹ️  Trained chatbot server not available (this is normal if not running)');
+        this.hasLoggedUnavailable = true;
+      }
     }
   }
 
@@ -44,7 +51,13 @@ class TrainedChatbotService {
       await this.checkServerAvailability();
       
       if (!this.isAvailable) {
-        throw new Error('Trained chatbot server is not available');
+        // Return a more informative error for graceful fallback
+        return {
+          success: false,
+          error: 'Trained chatbot server is not available',
+          fallbackReason: 'Server not running or not accessible',
+          suggestion: 'Start the Python server with: python python-server/chatbot_server.py'
+        };
       }
 
       const response = await fetch(`${this.serverUrl}/generate-resource`, {
@@ -65,7 +78,11 @@ class TrainedChatbotService {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Server error');
+        return {
+          success: false,
+          error: errorData.error || 'Server error',
+          fallbackReason: 'Server returned error response'
+        };
       }
 
       const result = await response.json();
@@ -80,8 +97,13 @@ class TrainedChatbotService {
       };
 
     } catch (error) {
-      console.error('Trained chatbot generation error:', error);
-      throw error;
+      console.log('Trained chatbot service unavailable:', error.message);
+      return {
+        success: false,
+        error: error.message,
+        fallbackReason: 'Network or server connection error',
+        suggestion: 'Check if Python server is running on localhost:5001'
+      };
     }
   }
 

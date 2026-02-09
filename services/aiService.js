@@ -70,15 +70,16 @@ class AIResourceGenerator {
 
     try {
       // First, try the trained chatbot model
-      console.log('Attempting to use trained chatbot model...');
-      try {
-        const trainedResult = await trainedChatbotService.generateResource(params);
-        if (trainedResult.success) {
-          console.log('✅ Generated resource using trained chatbot model');
-          return trainedResult;
+      console.log('🤖 Attempting to use trained chatbot model...');
+      const trainedResult = await trainedChatbotService.generateResource(params);
+      if (trainedResult.success) {
+        console.log('✅ Generated resource using trained chatbot model');
+        return trainedResult;
+      } else {
+        console.log('ℹ️  Trained chatbot unavailable:', trainedResult.fallbackReason);
+        if (trainedResult.suggestion) {
+          console.log('💡 Suggestion:', trainedResult.suggestion);
         }
-      } catch (trainedError) {
-        console.log('Trained chatbot not available, trying Azure OpenAI...', trainedError.message);
       }
 
       // Ensure Azure OpenAI client is initialized

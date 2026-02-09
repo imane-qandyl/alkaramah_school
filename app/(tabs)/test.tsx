@@ -1,19 +1,43 @@
-import { StyleSheet, View, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ScrollView, TextInput, Alert, Share } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { storageService } from '@/services/storageService';
 import { enhancedStorageService } from '@/services/databaseService';
 import { useFocusEffect } from '@react-navigation/native';
+import { useAuth } from '@/contexts/AuthContext';
+import ResourceEditor from '@/components/ResourceEditor';
+
+interface Resource {
+  id: string;
+  title?: string;
+  content?: string;
+  format?: string;
+  aetTarget?: string;
+  studentAge?: string;
+  createdAt?: string;
+  timestamp?: string;
+  lastModified?: string;
+}
 
 export default function ResourceLibraryScreen() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
-  const [resources, setResources] = useState([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const [sortBy, setSortBy] = useState('newest');
 
   const filterOptions = ['All', 'Worksheets', 'Activity Cards', 'Slides', 'Checklists'];
+  const sortOptions = [
+    { key: 'newest', label: 'Newest First' },
+    { key: 'oldest', label: 'Oldest First' },
+    { key: 'title', label: 'Title A-Z' },
+    { key: 'format', label: 'By Format' }
+  ];
 
   // Load resources from storage
   const loadResources = useCallback(async () => {
@@ -25,7 +49,7 @@ export default function ResourceLibraryScreen() {
       try {
         allResources = await enhancedStorageService.getAllResources();
       } catch (error) {
-        console.log('Enhanced storage not available, using basic storage:', error.message);
+        console.log('Enhanced storage not available, using basic storage:', (error as Error).message);
         allResources = await storageService.getAllResources();
       }
       
@@ -44,20 +68,35 @@ export default function ResourceLibraryScreen() {
     }, [loadResources])
   );
 
-  // Filter resources based on search and filter
-  const filteredResources = resources.filter(resource => {
-    const matchesSearch = resource.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         resource.aetTarget?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = selectedFilter === 'All' || 
-                         resource.format?.toLowerCase().includes(selectedFilter.toLowerCase()) ||
-                         (selectedFilter === 'Activity Cards' && resource.format === 'cards') ||
-                         (selectedFilter === 'Worksheets' && resource.format === 'worksheet') ||
-                         (selectedFilter === 'Slides' && resource.format === 'slides') ||
-                         (selectedFilter === 'Checklists' && resource.format === 'checklist');
-    return matchesSearch && matchesFilter;
-  });
+  // Filter and sort resources
+  const filteredAndSortedResources = resources
+    .filter(resource => {
+      const matchesSearch = resource.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           resource.aetTarget?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           resource.content?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = selectedFilter === 'All' || 
+                           resource.format?.toLowerCase().includes(selectedFilter.toLowerCase()) ||
+                           (selectedFilter === 'Activity Cards' && resource.format === 'cards') ||
+                           (selectedFilter === 'Worksheets' && resource.format === 'worksheet') ||
+                           (selectedFilter === 'Slides' && resource.format === 'slides') ||
+                           (selectedFilter === 'Checklists' && resource.format === 'checklist');
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.createdAt || a.timestamp || '').getTime() - new Date(b.createdAt || b.timestamp || '').getTime();
+        case 'title':
+          return (a.title || '').localeCompare(b.title || '');
+        case 'format':
+          return (a.format || '').localeCompare(b.format || '');
+        case 'newest':
+        default:
+          return new Date(b.createdAt || b.timestamp || '').getTime() - new Date(a.createdAt || a.timestamp || '').getTime();
+      }
+    });
 
-  const getResourceIcon = (format) => {
+  const getResourceIcon = (format?: string) => {
     switch (format) {
       case 'worksheet': return 'document-text-outline';
       case 'cards': return 'images-outline';
@@ -67,7 +106,7 @@ export default function ResourceLibraryScreen() {
     }
   };
 
-  const getResourceColor = (format) => {
+  const getResourceColor = (format?: string) => {
     switch (format) {
       case 'worksheet': return '#4CAF50';
       case 'cards': return '#2196F3';
@@ -77,11 +116,11 @@ export default function ResourceLibraryScreen() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string) => {
     if (!dateString) return 'Unknown';
     const date = new Date(dateString);
     const now = new Date();
-    const diffTime = Math.abs(now - date);
+    const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 1) return 'Today';
@@ -90,47 +129,193 @@ export default function ResourceLibraryScreen() {
     return date.toLocaleDateString();
   };
 
+  const handleResourcePress = (resource: Resource) => {
+    // Track resource access
+    markResourceAccessed(resource.id);
+    setSelectedResource(resource);
+    setShowEditor(true);
+  };
+
+  const markResourceAccessed = async (resourceId: string) => {
+    try {
+      // Update access count and last accessed time
+      const resource = await storageService.getResourceById(resourceId);
+      if (resource) {
+        await storageService.updateResource(resourceId, {
+          lastAccessed: new Date().toISOString(),
+          accessCount: (resource.accessCount || 0) + 1
+        });
+      }
+    } catch (error) {
+      console.log('Could not track resource access:', error);
+    }
+  };
+
+  const handleResourceSave = async (editedContent: string) => {
+    try {
+      if (!selectedResource) return;
+      
+      const result = await storageService.updateResource(selectedResource.id, {
+        content: editedContent,
+        lastModified: new Date().toISOString()
+      });
+      
+      if (result.success) {
+        await loadResources();
+        Alert.alert('Success', 'Resource updated successfully!');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save resource');
+    }
+  };
+
+  const handleResourceExport = async (format: string) => {
+    Alert.alert('Export', `Resource exported as ${format}`);
+  };
+
+  const handleDeleteResource = async (resourceId: string) => {
+    Alert.alert(
+      'Delete Resource',
+      'Are you sure you want to delete this resource? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await storageService.deleteResource(resourceId);
+              await loadResources();
+              Alert.alert('Success', 'Resource deleted successfully');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete resource');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleShareResource = async (resource: Resource) => {
+    try {
+      await Share.share({
+        message: `Check out this resource: ${resource.title}\n\n${resource.content?.substring(0, 200)}...`,
+        title: resource.title
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share resource');
+    }
+  };
+
+  const getResourceStats = () => {
+    const stats = {
+      total: resources.length,
+      worksheets: resources.filter(r => r.format === 'worksheet').length,
+      cards: resources.filter(r => r.format === 'cards').length,
+      slides: resources.filter(r => r.format === 'slides').length,
+      checklists: resources.filter(r => r.format === 'checklist').length,
+    };
+    return stats;
+  };
+
+  if (showEditor && selectedResource) {
+    return (
+      <ResourceEditor
+        content={selectedResource.content || ''}
+        onSave={handleResourceSave}
+        onExport={handleResourceExport}
+        onClose={() => {
+          setShowEditor(false);
+          setSelectedResource(null);
+        }}
+      />
+    );
+  }
+
+  const stats = getResourceStats();
+
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
       <ThemedView style={styles.header}>
         <ThemedText style={styles.headerTitle}>Resource Library</ThemedText>
         <ThemedText style={styles.headerSubtitle}>
-          Manage and organize your created resources
+          {user?.fullName ? `${user.fullName}'s` : 'Your'} created resources ({stats.total} total)
         </ThemedText>
       </ThemedView>
 
-      {/* Search Bar */}
+      {/* Statistics Cards */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#4CAF50' }]}>
+          <Ionicons name="library-outline" size={24} color="white" />
+          <ThemedText style={styles.statNumber}>{stats.total}</ThemedText>
+          <ThemedText style={styles.statLabel}>Total Resources</ThemedText>
+        </ThemedView>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#2196F3' }]}>
+          <Ionicons name="document-text-outline" size={24} color="white" />
+          <ThemedText style={styles.statNumber}>{stats.worksheets}</ThemedText>
+          <ThemedText style={styles.statLabel}>Worksheets</ThemedText>
+        </ThemedView>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#FF9800' }]}>
+          <Ionicons name="images-outline" size={24} color="white" />
+          <ThemedText style={styles.statNumber}>{stats.cards}</ThemedText>
+          <ThemedText style={styles.statLabel}>Activity Cards</ThemedText>
+        </ThemedView>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#9C27B0' }]}>
+          <Ionicons name="easel-outline" size={24} color="white" />
+          <ThemedText style={styles.statNumber}>{stats.slides}</ThemedText>
+          <ThemedText style={styles.statLabel}>Slides</ThemedText>
+        </ThemedView>
+      </ScrollView>
+
+      {/* Search and Controls */}
       <ThemedView style={styles.searchContainer}>
-        <ThemedView style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color="#666" />
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search resources..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor="#666"
+            placeholderTextColor="#999"
           />
-        </ThemedView>
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        {/* Sort Dropdown */}
+        <TouchableOpacity style={styles.sortButton} onPress={() => {
+          Alert.alert(
+            'Sort Resources',
+            'Choose sorting option',
+            sortOptions.map(option => ({
+              text: option.label,
+              onPress: () => setSortBy(option.key)
+            }))
+          );
+        }}>
+          <Ionicons name="funnel-outline" size={18} color="#4CAF50" />
+          <ThemedText style={styles.sortText}>Sort</ThemedText>
+        </TouchableOpacity>
       </ThemedView>
 
       {/* Filter Tabs */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterContainer}
-        contentContainerStyle={styles.filterContent}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
         {filterOptions.map((filter) => (
           <TouchableOpacity
             key={filter}
             style={[
               styles.filterTab,
-              selectedFilter === filter && styles.filterTabActive
+              selectedFilter === filter && styles.activeFilterTab
             ]}
-            onPress={() => setSelectedFilter(filter)}>
+            onPress={() => setSelectedFilter(filter)}
+          >
             <ThemedText style={[
               styles.filterText,
-              selectedFilter === filter && styles.filterTextActive
+              selectedFilter === filter && styles.activeFilterText
             ]}>
               {filter}
             </ThemedText>
@@ -138,76 +323,146 @@ export default function ResourceLibraryScreen() {
         ))}
       </ScrollView>
 
-      {/* Resources Grid */}
-      <ThemedView style={styles.resourcesContainer}>
-        <ThemedView style={styles.resourcesHeader}>
-          <ThemedText style={styles.resourcesTitle}>
-            {filteredResources.length} Resources
-          </ThemedText>
-          <TouchableOpacity style={styles.sortButton}>
-            <Ionicons name="funnel-outline" size={16} color="#666" />
-            <ThemedText style={styles.sortText}>Sort</ThemedText>
-          </TouchableOpacity>
+      {/* Loading State */}
+      {loading ? (
+        <ThemedView style={styles.loadingContainer}>
+          <Ionicons name="library-outline" size={48} color="#ccc" />
+          <ThemedText style={styles.loadingText}>Loading your resources...</ThemedText>
         </ThemedView>
-
-        {loading ? (
-          <ThemedView style={styles.loadingContainer}>
-            <ThemedText style={styles.loadingText}>Loading resources...</ThemedText>
-          </ThemedView>
-        ) : filteredResources.length === 0 ? (
-          <ThemedView style={styles.emptyContainer}>
-            <Ionicons name="document-outline" size={48} color="#ccc" />
-            <ThemedText style={styles.emptyTitle}>No Resources Found</ThemedText>
-            <ThemedText style={styles.emptyText}>
-              {resources.length === 0 
-                ? "Create your first resource to get started!" 
-                : "Try adjusting your search or filter criteria."}
-            </ThemedText>
-          </ThemedView>
-        ) : (
-          filteredResources.map((resource) => (
-            <TouchableOpacity key={resource.id} style={styles.resourceCard}>
-              <ThemedView style={styles.resourceHeader}>
-                <ThemedView style={[styles.resourceIcon, { backgroundColor: getResourceColor(resource.format) + '20' }]}>
-                  <Ionicons name={getResourceIcon(resource.format)} size={24} color={getResourceColor(resource.format)} />
-                </ThemedView>
-                <ThemedView style={styles.resourceInfo}>
-                  <ThemedText style={styles.resourceTitle}>{resource.title || 'Untitled Resource'}</ThemedText>
-                  <ThemedText style={styles.resourceTarget}>{resource.aetTarget || 'No target specified'}</ThemedText>
-                  <ThemedView style={styles.resourceMeta}>
-                    <ThemedText style={styles.resourceType}>{resource.format || 'Unknown'}</ThemedText>
-                    {resource.studentAge && (
-                      <ThemedText style={styles.resourceAge}>Age {resource.studentAge}</ThemedText>
-                    )}
-                    <ThemedText style={styles.resourceCreated}>{formatDate(resource.createdAt)}</ThemedText>
-                  </ThemedView>
-                </ThemedView>
-                <TouchableOpacity style={styles.moreButton}>
-                  <Ionicons name="ellipsis-vertical" size={20} color="#666" />
+      ) : filteredAndSortedResources.length === 0 ? (
+        /* Empty State */
+        <ThemedView style={styles.emptyContainer}>
+          <Ionicons name="library-outline" size={64} color="#ccc" />
+          <ThemedText style={styles.emptyTitle}>
+            {searchQuery || selectedFilter !== 'All' ? 'No matching resources' : 'No resources yet'}
+          </ThemedText>
+          <ThemedText style={styles.emptySubtitle}>
+            {searchQuery || selectedFilter !== 'All' 
+              ? 'Try adjusting your search or filter'
+              : 'Create your first resource using the AI Chat tab'
+            }
+          </ThemedText>
+          {(!searchQuery && selectedFilter === 'All') && (
+            <>
+              <TouchableOpacity style={styles.createButton} onPress={() => {
+                // Navigate to AI Chat tab
+                Alert.alert('Create Resource', 'Go to AI Chat tab to create your first resource!');
+              }}>
+                <Ionicons name="add-circle-outline" size={20} color="white" />
+                <ThemedText style={styles.createButtonText}>Create Resource</ThemedText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={[styles.createButton, { backgroundColor: '#2196F3', marginTop: 12 }]} onPress={async () => {
+                try {
+                  const { addSampleResources } = await import('@/scripts/addSampleData');
+                  const result = await addSampleResources();
+                  if (result.success) {
+                    await loadResources();
+                    Alert.alert('Success', `Added ${result.count || 5} sample resources to your library!`);
+                  } else {
+                    Alert.alert('Info', result.message || 'Sample resources already exist');
+                  }
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to add sample resources');
+                }
+              }}>
+                <Ionicons name="library-outline" size={20} color="white" />
+                <ThemedText style={styles.createButtonText}>Add Sample Resources</ThemedText>
+              </TouchableOpacity>
+            </>
+          )}
+        </ThemedView>
+      ) : (
+        /* Resources Grid */
+        <View style={styles.resourcesGrid}>
+          {filteredAndSortedResources.map((resource) => (
+            <TouchableOpacity
+              key={resource.id}
+              style={styles.resourceCard}
+              onPress={() => handleResourcePress(resource)}
+            >
+              <View style={styles.resourceHeader}>
+                <View style={[styles.resourceIcon, { backgroundColor: getResourceColor(resource.format) }]}>
+                  <Ionicons name={getResourceIcon(resource.format)} size={24} color="white" />
+                </View>
+                <TouchableOpacity
+                  style={styles.moreButton}
+                  onPress={() => {
+                    Alert.alert(
+                      resource.title || 'Resource Options',
+                      'Choose an action',
+                      [
+                        { text: 'Edit', onPress: () => handleResourcePress(resource) },
+                        { text: 'Share', onPress: () => handleShareResource(resource) },
+                        { text: 'Delete', style: 'destructive', onPress: () => handleDeleteResource(resource.id) },
+                        { text: 'Cancel', style: 'cancel' }
+                      ]
+                    );
+                  }}
+                >
+                  <Ionicons name="ellipsis-vertical" size={16} color="#666" />
                 </TouchableOpacity>
-              </ThemedView>
+              </View>
+              
+              <ThemedText style={styles.resourceTitle} numberOfLines={2}>
+                {resource.title || 'Untitled Resource'}
+              </ThemedText>
+              
+              {resource.aetTarget && (
+                <ThemedText style={styles.resourceTarget} numberOfLines={1}>
+                  {resource.aetTarget}
+                </ThemedText>
+              )}
+              
+              <View style={styles.resourceMeta}>
+                <View style={[styles.badge, { backgroundColor: getResourceColor(resource.format) }]}>
+                  <ThemedText style={styles.badgeText}>
+                    {resource.format ? (resource.format.charAt(0).toUpperCase() + resource.format.slice(1)) : 'Resource'}
+                  </ThemedText>
+                </View>
+                
+                {resource.studentAge && (
+                  <View style={styles.ageBadge}>
+                    <ThemedText style={styles.ageBadgeText}>
+                      Age {resource.studentAge}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+              
+              <ThemedText style={styles.resourceDate}>
+                {formatDate(resource.createdAt || resource.timestamp)}
+              </ThemedText>
             </TouchableOpacity>
-          ))
-        )}
-      </ThemedView>
+          ))}
+        </View>
+      )}
 
       {/* Quick Actions */}
-      <ThemedView style={styles.quickActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="download-outline" size={20} color="#4CAF50" />
-          <ThemedText style={styles.actionText}>Export All</ThemedText>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="share-outline" size={20} color="#2196F3" />
-          <ThemedText style={styles.actionText}>Share</ThemedText>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="folder-outline" size={20} color="#FF9800" />
-          <ThemedText style={styles.actionText}>Organize</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
+      {filteredAndSortedResources.length > 0 && (
+        <ThemedView style={styles.quickActions}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => {
+            Alert.alert('Export All', 'Export all resources feature coming soon!');
+          }}>
+            <Ionicons name="download-outline" size={20} color="#4CAF50" />
+            <ThemedText style={styles.actionText}>Export All</ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton} onPress={() => {
+            Alert.alert('Share Library', 'Share library feature coming soon!');
+          }}>
+            <Ionicons name="share-outline" size={20} color="#4CAF50" />
+            <ThemedText style={styles.actionText}>Share Library</ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton} onPress={() => {
+            Alert.alert('Organize', 'Organization features coming soon!');
+          }}>
+            <Ionicons name="folder-outline" size={20} color="#4CAF50" />
+            <ThemedText style={styles.actionText}>Organize</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      )}
     </ScrollView>
   );
 }
@@ -215,102 +470,192 @@ export default function ResourceLibraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   header: {
     padding: 20,
     paddingTop: 60,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
+    color: '#212529',
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#6c757d',
+  },
+  statsContainer: {
+    paddingVertical: 16,
+    paddingLeft: 20,
+    backgroundColor: '#fff',
+  },
+  statCard: {
+    width: 120,
+    height: 100,
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: 'white',
+    textAlign: 'center',
+    marginTop: 4,
   },
   searchContainer: {
     padding: 16,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
-  searchBar: {
+  searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    marginBottom: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
     fontSize: 16,
-    color: '#333',
+    color: '#212529',
+  },
+  clearButton: {
+    padding: 4,
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  sortText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '500',
   },
   filterContainer: {
     backgroundColor: '#fff',
-    paddingBottom: 16,
-  },
-  filterContent: {
+    paddingVertical: 12,
     paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
   filterTab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
   },
-  filterTabActive: {
+  activeFilterTab: {
     backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
   },
   filterText: {
     fontSize: 14,
-    color: '#666',
+    color: '#6c757d',
     fontWeight: '500',
   },
-  filterTextActive: {
+  activeFilterText: {
     color: '#fff',
   },
-  resourcesContainer: {
-    padding: 16,
-  },
-  resourcesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    padding: 40,
   },
-  resourcesTitle: {
-    fontSize: 18,
+  loadingText: {
+    fontSize: 16,
+    color: '#6c757d',
+    marginTop: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
     fontWeight: '600',
+    color: '#212529',
+    marginTop: 16,
+    marginBottom: 8,
   },
-  sortButton: {
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#6c757d',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 8,
   },
-  sortText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#666',
+  createButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  resourcesGrid: {
+    padding: 16,
   },
   resourceCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f1f3f4',
   },
   resourceHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    marginBottom: 12,
   },
   resourceIcon: {
     width: 48,
@@ -320,85 +665,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  resourceInfo: {
-    flex: 1,
+  moreButton: {
+    padding: 8,
+    marginLeft: 'auto',
   },
   resourceTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
+    color: '#212529',
     marginBottom: 4,
+    lineHeight: 24,
   },
   resourceTarget: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
+    color: '#6c757d',
+    marginBottom: 12,
+    lineHeight: 20,
   },
   resourceMeta: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  resourceType: {
-    fontSize: 12,
-    color: '#4CAF50',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  resourceAge: {
-    fontSize: 12,
-    color: '#2196F3',
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  resourceCreated: {
-    fontSize: 12,
-    color: '#666',
-  },
-  moreButton: {
-    padding: 4,
-  },
-  loadingContainer: {
-    padding: 40,
     alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
     marginBottom: 8,
   },
-  emptyText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 20,
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  badgeText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '600',
+  },
+  ageBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#e3f2fd',
+    marginRight: 8,
+  },
+  ageBadgeText: {
+    fontSize: 12,
+    color: '#1976d2',
+    fontWeight: '500',
+  },
+  resourceDate: {
+    fontSize: 12,
+    color: '#6c757d',
   },
   quickActions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    padding: 16,
+    padding: 20,
     backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
     marginTop: 8,
   },
   actionButton: {
     alignItems: 'center',
     padding: 12,
+    borderRadius: 8,
+    minWidth: 80,
   },
   actionText: {
     fontSize: 12,
-    marginTop: 4,
-    color: '#666',
+    marginTop: 6,
+    color: '#6c757d',
+    fontWeight: '500',
   },
 });

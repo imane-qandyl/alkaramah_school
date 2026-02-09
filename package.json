@@ -7,7 +7,12 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "python-server": "cd python-server && python chatbot_server.py",
+    "test-server": "node scripts/testPythonServer.js",
+    "server-status": "node scripts/testPythonServer.js --status",
+    "add-sample-data": "node scripts/addSampleData.js",
+    "setup-azure": "node scripts/setupApiKey.js"
   },
   "dependencies": {
     "@azure/openai": "^2.0.0",
