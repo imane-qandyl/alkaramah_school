@@ -119,7 +119,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ParallaxScrollView
-        headerBackgroundColor={{ light: '#4CAF50', dark: '#2E7D32' }}
+        headerBackgroundColor={{ light: '#2C3E50', dark: '#1A1D23' }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -172,7 +172,7 @@ export default function HomeScreen() {
             <View style={styles.profileHeader}>
               <View style={styles.profileInfo}>
                 <View style={styles.profileBadge}>
-                  <Ionicons name="star" size={16} color="#4CAF50" />
+                  <Ionicons name="star" size={16} color="#2C3E50" />
                   <Text style={styles.profileBadgeText}>Active Student</Text>
                 </View>
                 <Text style={styles.profileName}>{activeProfile.studentName}</Text>
@@ -184,24 +184,17 @@ export default function HomeScreen() {
                 style={styles.profileActionButton}
                 onPress={() => router.push(`/student-detail/${activeProfile.id}`)}
               >
-                <Ionicons name="chevron-forward" size={20} color="#4CAF50" />
+                <Ionicons name="chevron-forward" size={20} color="#2C3E50" />
               </TouchableOpacity>
             </View>
             
             <View style={styles.profileActions}>
               <TouchableOpacity 
                 style={styles.profileQuickAction}
-                onPress={() => router.push('/(tabs)/ai-chat')}
-              >
-                <Ionicons name="chatbubble" size={16} color="#4CAF50" />
-                <Text style={styles.profileQuickActionText}>Generate Resource</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.profileQuickAction}
                 onPress={() => router.push('/(tabs)/students')}
               >
-                <Ionicons name="people" size={16} color="#666" />
-                <Text style={styles.profileQuickActionText}>Switch Student</Text>
+                <Ionicons name="chatbubble" size={16} color="#2C3E50" />
+                <Text style={styles.profileQuickActionText}>Switch student</Text>
               </TouchableOpacity>
             </View>
           </ThemedView>
@@ -253,7 +246,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/(tabs)/students')}
               activeOpacity={0.7}
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#2196F3' }]}>
+              <View style={[styles.actionIcon, { backgroundColor: '#5DADE2' }]}>
                 <Ionicons name="people" size={20} color="#fff" />
               </View>
               <Text style={styles.actionTitle}>Students</Text>
@@ -264,7 +257,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/(tabs)/test')}
               activeOpacity={0.7}
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#FF9800' }]}>
+              <View style={[styles.actionIcon, { backgroundColor: '#E67E22' }]}>
                 <Ionicons name="library" size={20} color="#fff" />
               </View>
               <Text style={styles.actionTitle}>Library</Text>
@@ -289,7 +282,7 @@ export default function HomeScreen() {
                     <Ionicons 
                       name={activity.type === 'cards' ? 'images' : 'document-text'} 
                       size={16} 
-                      color="#4CAF50" 
+                      color="#2C3E50" 
                     />
                   </View>
                   <View style={styles.activityContent}>
@@ -317,7 +310,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: '#FAFBFC'
   },
   
   // Enhanced Header
@@ -362,7 +355,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     marginRight: 12,
-    tintColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 18,
+    padding: 2,
   },
   headerTitle: {
     fontSize: 32,
@@ -409,10 +404,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#E8F5E9',
+    borderColor: '#F4F6F8',
     ...Platform.select({
       ios: {
-        shadowColor: '#4CAF50',
+        shadowColor: '#2C3E50',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 12,
@@ -434,17 +429,19 @@ const styles = StyleSheet.create({
   profileBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#F4F6F8',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     alignSelf: 'flex-start',
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
   },
   profileBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#2C3E50',
     marginLeft: 4,
   },
   profileName: {
@@ -461,11 +458,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F4F6F8',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E1E8ED',
   },
   profileActions: {
     flexDirection: 'row',
@@ -474,18 +471,19 @@ const styles = StyleSheet.create({
   profileQuickAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F4F6F8',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E1E8ED',
   },
   profileQuickActionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: '#34495E',
     marginLeft: 6,
+    fontFamily: 'SF Pro Text',
   },
 
   // Weekly Progress
@@ -521,7 +519,7 @@ const styles = StyleSheet.create({
   progressValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#4CAF50',
+    color: '#2C3E50',
   },
   progressBarContainer: {
     flexDirection: 'row',
@@ -537,14 +535,14 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     borderRadius: 4,
     minWidth: 8,
   },
   progressPercentage: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#2C3E50',
     minWidth: 40,
   },
   progressSubtext: {
@@ -582,17 +580,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F4F6F8',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E1E8ED',
     flexDirection: 'row',
     alignItems: 'center',
   },
   primaryAction: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
+    borderColor: '#2C3E50',
     marginBottom: 8,
   },
   primaryActionContent: {
@@ -660,7 +658,7 @@ const styles = StyleSheet.create({
   viewAllText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#4CAF50',
+    color: '#2C3E50',
   },
   activityList: {
     gap: 12,
@@ -674,10 +672,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#F4F6F8',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
   },
   activityContent: {
     flex: 1,
@@ -747,10 +747,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: '#2C3E50',
     ...Platform.select({
       ios: {
-        shadowColor: '#4CAF50',
+        shadowColor: '#2C3E50',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 12,
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   primaryButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -804,12 +804,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: '#2C3E50',
   },
   secondaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#2C3E50',
     marginLeft: 8,
   },
 });

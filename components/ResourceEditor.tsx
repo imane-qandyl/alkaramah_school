@@ -97,7 +97,7 @@ export default function ResourceEditor({ content, onSave, onExport, onClose }: R
           <Ionicons 
             name={isEditing ? "checkmark" : "create"} 
             size={24} 
-            color="#4CAF50" 
+            color="#2C3E50" 
           />
         </TouchableOpacity>
       </ThemedView>
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginVertical: 10,
-    color: '#4CAF50',
+    color: '#2C3E50',
   },
   bold: {
     fontSize: 16,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 16,
-    color: '#4CAF50',
+    color: '#2C3E50',
     marginRight: 8,
   },
   listText: {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     padding: 16,
     borderRadius: 12,
   },
@@ -286,10 +286,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F44336',
   },
   docxButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#5DADE2',
   },
   shareButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#E67E22',
   },
   exportButtonText: {
     color: '#fff',

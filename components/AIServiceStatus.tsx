@@ -58,9 +58,9 @@ ${!status.trainedChatbot ? '\n💡 To use the trained model, start the Python se
   };
 
   const getStatusColor = () => {
-    if (status.trainedChatbot) return '#4CAF50'; // Green - best option
-    if (status.azureOpenAI) return '#FF9800'; // Orange - good option
-    return '#9E9E9E'; // Gray - fallback option
+    if (status.trainedChatbot) return '#27AE60'; // Muted green - best option
+    if (status.azureOpenAI) return '#E67E22'; // Muted orange - good option
+    return '#8B9DC3'; // Professional gray - fallback option
   };
 
   const getStatusIcon = () => {
@@ -107,7 +107,7 @@ ${!status.trainedChatbot ? '\n💡 To use the trained model, start the Python se
             <Ionicons 
               name={status.trainedChatbot ? 'checkmark-circle' : 'close-circle'} 
               size={14} 
-              color={status.trainedChatbot ? '#4CAF50' : '#F44336'} 
+              color={status.trainedChatbot ? '#27AE60' : '#E74C3C'} 
             />
             <ThemedText style={styles.serviceText}>Trained Model</ThemedText>
           </View>
@@ -116,7 +116,7 @@ ${!status.trainedChatbot ? '\n💡 To use the trained model, start the Python se
             <Ionicons 
               name={status.azureOpenAI ? 'checkmark-circle' : 'close-circle'} 
               size={14} 
-              color={status.azureOpenAI ? '#4CAF50' : '#F44336'} 
+              color={status.azureOpenAI ? '#27AE60' : '#E74C3C'} 
             />
             <ThemedText style={styles.serviceText}>Azure OpenAI</ThemedText>
           </View>

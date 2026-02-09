@@ -406,7 +406,7 @@ export default function TeacherProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ParallaxScrollView
-          headerBackgroundColor={{ light: '#4CAF50', dark: '#2E7D32' }}
+          headerBackgroundColor={{ light: '#2C3E50', dark: '#1A1D23' }}
           headerImage={
             <View style={styles.headerContent}>
               <View style={styles.headerTop}>
@@ -414,7 +414,7 @@ export default function TeacherProfileScreen() {
                   <View style={styles.avatarContainer}>
                     <Ionicons name="person-circle" size={80} color="rgba(255,255,255,0.9)" />
                     <TouchableOpacity style={styles.editAvatarButton} onPress={handleEditProfile}>
-                      <Ionicons name="camera" size={16} color="#4CAF50" />
+                      <Ionicons name="camera" size={16} color="#2C3E50" />
                     </TouchableOpacity>
                   </View>
                   <View style={styles.headerText}>
@@ -449,7 +449,7 @@ export default function TeacherProfileScreen() {
         {/* Professional Summary */}
         <ThemedView style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
-            <Ionicons name="briefcase" size={24} color="#4CAF50" />
+            <Ionicons name="briefcase" size={24} color="#2C3E50" />
             <Text style={styles.summaryTitle}>Professional Summary</Text>
           </View>
           <Text style={styles.summaryText}>{teacherInfo.experience}</Text>
@@ -457,64 +457,13 @@ export default function TeacherProfileScreen() {
           
           <View style={styles.summaryActions}>
             <TouchableOpacity style={styles.summaryAction} onPress={handleViewCertifications}>
-              <Ionicons name="school" size={16} color="#4CAF50" />
+              <Ionicons name="school" size={16} color="#2C3E50" />
               <Text style={styles.summaryActionText}>Certifications</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.summaryAction} onPress={handleViewAchievements}>
-              <Ionicons name="trophy" size={16} color="#FF9800" />
+              <Ionicons name="trophy" size={16} color="#E67E22" />
               <Text style={styles.summaryActionText}>Achievements</Text>
             </TouchableOpacity>
-          </View>
-        </ThemedView>
-
-        {/* Progress Tracking */}
-        <ThemedView style={styles.progressCard}>
-          <Text style={styles.sectionTitle}>Progress Tracking</Text>
-          
-          {/* Monthly Goal */}
-          <View style={styles.progressSection}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>Monthly Goal</Text>
-              <Text style={styles.progressValue}>{stats.resourcesCreated}/{stats.monthlyGoal}</Text>
-            </View>
-            <View style={styles.progressBarContainer}>
-              <View style={styles.progressBarBackground}>
-                <View 
-                  style={[styles.progressBarFill, { width: `${getProgressPercentage()}%` }]} 
-                />
-              </View>
-              <Text style={styles.progressPercentage}>{Math.round(getProgressPercentage())}%</Text>
-            </View>
-          </View>
-
-          {/* Weekly Progress */}
-          <View style={styles.progressSection}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>This Week</Text>
-              <Text style={styles.progressValue}>{stats.weeklyProgress}/5</Text>
-            </View>
-            <View style={styles.progressBarContainer}>
-              <View style={styles.progressBarBackground}>
-                <View 
-                  style={[styles.progressBarFill, { width: `${getWeeklyProgressPercentage()}%` }]} 
-                />
-              </View>
-              <Text style={styles.progressPercentage}>{Math.round(getWeeklyProgressPercentage())}%</Text>
-            </View>
-          </View>
-
-          {/* Performance Metrics */}
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <Ionicons name="time" size={20} color="#2196F3" />
-              <Text style={styles.metricValue}>{stats.avgSessionTime}min</Text>
-              <Text style={styles.metricLabel}>Avg Session</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Ionicons name="trending-up" size={20} color="#4CAF50" />
-              <Text style={styles.metricValue}>{stats.totalSessions}</Text>
-              <Text style={styles.metricLabel}>Total Sessions</Text>
-            </View>
           </View>
         </ThemedView>
 
@@ -535,7 +484,7 @@ export default function TeacherProfileScreen() {
                     <Ionicons 
                       name={activity.type === 'cards' ? 'images' : 'document-text'} 
                       size={16} 
-                      color="#4CAF50" 
+                      color="#2C3E50" 
                     />
                   </View>
                   <View style={styles.activityContent}>
@@ -567,7 +516,7 @@ export default function TeacherProfileScreen() {
             onPress={handleTestConnection}
             disabled={isTestingConnection}>
             <View style={styles.testConnectionContent}>
-              <Ionicons name="cloud-outline" size={24} color={isTestingConnection ? "#999" : "#4CAF50"} />
+              <Ionicons name="cloud-outline" size={24} color={isTestingConnection ? "#999" : "#2C3E50"} />
               <View style={styles.testConnectionText}>
                 <Text style={[styles.testConnectionTitle, isTestingConnection && styles.testConnectionTitleDisabled]}>
                   Test Azure OpenAI Connection
@@ -579,7 +528,7 @@ export default function TeacherProfileScreen() {
               {isTestingConnection ? (
                 <ActivityIndicator size="small" color="#999" />
               ) : (
-                <Ionicons name="chevron-forward" size={20} color="#4CAF50" />
+                <Ionicons name="chevron-forward" size={20} color="#2C3E50" />
               )}
             </View>
           </TouchableOpacity>
@@ -590,7 +539,7 @@ export default function TeacherProfileScreen() {
             onPress={handleTestTrainedChatbot}
             disabled={isTestingConnection}>
             <View style={styles.testConnectionContent}>
-              <Ionicons name="chatbubble-ellipses-outline" size={24} color={isTestingConnection ? "#999" : "#2196F3"} />
+              <Ionicons name="chatbubble-ellipses-outline" size={24} color={isTestingConnection ? "#999" : "#5DADE2"} />
               <View style={styles.testConnectionText}>
                 <Text style={[styles.testConnectionTitle, isTestingConnection && styles.testConnectionTitleDisabled]}>
                   Test Trained Chatbot Model
@@ -602,7 +551,7 @@ export default function TeacherProfileScreen() {
               {isTestingConnection ? (
                 <ActivityIndicator size="small" color="#999" />
               ) : (
-                <Ionicons name="chevron-forward" size={20} color="#2196F3" />
+                <Ionicons name="chevron-forward" size={20} color="#5DADE2" />
               )}
             </View>
           </TouchableOpacity>
@@ -613,7 +562,7 @@ export default function TeacherProfileScreen() {
             onPress={handleTestAllServices}
             disabled={isTestingConnection}>
             <View style={styles.testConnectionContent}>
-              <Ionicons name="checkmark-done-outline" size={24} color={isTestingConnection ? "#999" : "#FF9800"} />
+              <Ionicons name="checkmark-done-outline" size={24} color={isTestingConnection ? "#999" : "#E67E22"} />
               <View style={styles.testConnectionText}>
                 <Text style={[styles.testConnectionTitle, isTestingConnection && styles.testConnectionTitleDisabled]}>
                   Test All AI Services
@@ -625,7 +574,7 @@ export default function TeacherProfileScreen() {
               {isTestingConnection ? (
                 <ActivityIndicator size="small" color="#999" />
               ) : (
-                <Ionicons name="chevron-forward" size={20} color="#FF9800" />
+                <Ionicons name="chevron-forward" size={20} color="#E67E22" />
               )}
             </View>
           </TouchableOpacity>
@@ -639,19 +588,19 @@ export default function TeacherProfileScreen() {
           
           <View style={styles.supportGrid}>
             <TouchableOpacity style={styles.supportItem}>
-              <Ionicons name="help-circle" size={24} color="#4CAF50" />
+              <Ionicons name="help-circle" size={24} color="#2C3E50" />
               <Text style={styles.supportTitle}>Help Center</Text>
               <Text style={styles.supportDescription}>Get answers to common questions</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.supportItem}>
-              <Ionicons name="book" size={24} color="#2196F3" />
+              <Ionicons name="book" size={24} color="#5DADE2" />
               <Text style={styles.supportTitle}>User Guide</Text>
               <Text style={styles.supportDescription}>Learn how to use TeachSmart</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.supportItem}>
-              <Ionicons name="mail" size={24} color="#FF9800" />
+              <Ionicons name="mail" size={24} color="#E67E22" />
               <Text style={styles.supportTitle}>Contact Support</Text>
               <Text style={styles.supportDescription}>Get help from our team</Text>
             </TouchableOpacity>
@@ -680,7 +629,7 @@ interface InfoRowProps {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA'
+    backgroundColor: '#FAFBFC'
   },
   
   // Enhanced Header
@@ -716,7 +665,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: '#2C3E50',
   },
   headerText: {
     flex: 1,
@@ -726,12 +675,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     marginBottom: 2,
+    fontFamily: 'SF Pro Display',
+    letterSpacing: -0.3,
   },
   headerRole: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
     marginBottom: 2,
+    fontFamily: 'SF Pro Text',
   },
   headerExperience: {
     fontSize: 14,
@@ -775,7 +727,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8F5E9',
     ...Platform.select({
       ios: {
-        shadowColor: '#4CAF50',
+        shadowColor: '#2C3E50',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 12,
@@ -804,7 +756,7 @@ const styles = StyleSheet.create({
   },
   summarySpecialty: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#2C3E50',
     fontWeight: '500',
     marginBottom: 16,
   },
@@ -865,7 +817,7 @@ const styles = StyleSheet.create({
   progressValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#4CAF50',
+    color: '#2C3E50',
   },
   progressBarContainer: {
     flexDirection: 'row',
@@ -880,14 +832,14 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     borderRadius: 4,
     minWidth: 8,
   },
   progressPercentage: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#2C3E50',
     minWidth: 40,
   },
   metricsGrid: {
@@ -945,7 +897,7 @@ const styles = StyleSheet.create({
   viewAllText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#4CAF50',
+    color: '#2C3E50',
   },
   activityList: {
     gap: 12,
@@ -1054,7 +1006,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#FF9800',
+    borderColor: '#E67E22',
     marginTop: 12,
     ...Platform.select({
       ios: {

@@ -104,7 +104,7 @@ export default function LoginScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#2C3E50" />
           <Text style={styles.loadingText}>Initializing...</Text>
         </View>
       </SafeAreaView>
@@ -198,7 +198,7 @@ export default function LoginScreen() {
               onPress={showCredentials}
               disabled={isLoading}
             >
-              <Ionicons name="information-circle-outline" size={16} color="#4CAF50" />
+              <Ionicons name="information-circle-outline" size={16} color="#2C3E50" />
               <Text style={styles.demoButtonText}>Show Demo Credentials</Text>
             </TouchableOpacity>
           </View>
@@ -219,7 +219,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FAFBFC',
   },
   keyboardContainer: {
     flex: 1,
@@ -249,32 +249,39 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     marginBottom: 16,
-    tintColor: '#4CAF50',
+    backgroundColor: 'rgba(44, 62, 80, 0.05)',
+    borderRadius: 20,
+    padding: 8,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#333',
+    color: '#34495E',
     marginBottom: 8,
+    fontFamily: 'SF Pro Display',
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#8B9DC3',
     textAlign: 'center',
+    fontFamily: 'SF Pro Text',
   },
 
   // Form
   formContainer: {
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 32,
     marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#F4F6F8',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
+        shadowColor: '#2C3E50',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.06,
+        shadowRadius: 24,
       },
       android: {
         elevation: 8,
@@ -284,26 +291,29 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#333',
+    color: '#34495E',
     textAlign: 'center',
     marginBottom: 8,
+    fontFamily: 'SF Pro Display',
+    letterSpacing: -0.3,
   },
   formSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#8B9DC3',
     textAlign: 'center',
     marginBottom: 32,
+    fontFamily: 'SF Pro Text',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F4F6F8',
     borderRadius: 12,
     marginBottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E1E8ED',
   },
   inputIcon: {
     marginRight: 12,
@@ -311,14 +321,15 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: '#34495E',
     paddingVertical: 16,
+    fontFamily: 'SF Pro Text',
   },
   eyeIcon: {
     padding: 4,
   },
   loginButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     borderRadius: 12,
     paddingVertical: 16,
     flexDirection: 'row',
@@ -328,7 +339,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   loginButtonDisabled: {
-    backgroundColor: '#A5D6A7',
+    backgroundColor: '#8B9DC3',
+    opacity: 0.6,
   },
   loginButtonText: {
     color: '#fff',
@@ -342,12 +354,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: '#2C3E50',
     borderRadius: 12,
     backgroundColor: 'transparent',
   },
   demoButtonText: {
-    color: '#4CAF50',
+    color: '#2C3E50',
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,

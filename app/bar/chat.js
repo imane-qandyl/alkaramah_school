@@ -73,10 +73,10 @@ export default function ResourceCreatorScreen() {
   ];
 
   const resourceFormats = [
-    { id: 'worksheet', label: 'Worksheet', icon: 'document-text-outline', color: '#4CAF50' },
-    { id: 'cards', label: 'Activity Cards', icon: 'images-outline', color: '#2196F3' },
-    { id: 'slides', label: 'Presentation Slides', icon: 'easel-outline', color: '#FF9800' },
-    { id: 'checklist', label: 'Checklist', icon: 'checkmark-circle-outline', color: '#9C27B0' }
+    { id: 'worksheet', label: 'Worksheet', icon: 'document-text-outline', color: '#2C3E50' },
+    { id: 'cards', label: 'Activity Cards', icon: 'images-outline', color: '#5DADE2' },
+    { id: 'slides', label: 'Presentation Slides', icon: 'easel-outline', color: '#E67E22' },
+    { id: 'checklist', label: 'Checklist', icon: 'checkmark-circle-outline', color: '#7FB8A3' }
   ];
 
   const commonAETTargets = [

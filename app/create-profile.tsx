@@ -41,9 +41,9 @@ export default function CreateProfileScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const supportLevels = [
-    { id: 'low', label: 'Low Support', description: 'Independent with minimal assistance', color: '#4CAF50' },
-    { id: 'medium', label: 'Medium Support', description: 'Needs regular support and guidance', color: '#FF9800' },
-    { id: 'high', label: 'High Support', description: 'Requires substantial daily support', color: '#F44336' }
+    { id: 'low', label: 'Low Support', description: 'Independent with minimal assistance', color: '#27AE60' },
+    { id: 'medium', label: 'Medium Support', description: 'Needs regular support and guidance', color: '#E67E22' },
+    { id: 'high', label: 'High Support', description: 'Requires substantial daily support', color: '#E74C3C' }
   ];
 
   const attentionOptions = [
@@ -251,7 +251,7 @@ export default function CreateProfileScreen() {
       {/* Header */}
       <ThemedView style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#4CAF50" />
+          <Ionicons name="arrow-back" size={24} color="#2C3E50" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Create Student Profile</ThemedText>
         <View style={{ width: 24 }} />
@@ -357,7 +357,7 @@ export default function CreateProfileScreen() {
                   <Ionicons 
                     name={modality.icon as any} 
                     size={24} 
-                    color={formData.learningModalities.includes(modality.id) ? '#fff' : '#4CAF50'} 
+                    color={formData.learningModalities.includes(modality.id) ? '#fff' : '#2C3E50'} 
                   />
                   <Text style={[
                     styles.modalityLabel,
@@ -419,7 +419,7 @@ export default function CreateProfileScreen() {
                   <Ionicons 
                     name={mode.icon as any} 
                     size={24} 
-                    color={formData.communicationModes.includes(mode.id) ? '#fff' : '#4CAF50'} 
+                    color={formData.communicationModes.includes(mode.id) ? '#fff' : '#2C3E50'} 
                   />
                   <Text style={[
                     styles.modalityLabel,
@@ -640,8 +640,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   optionCardSelected: {
-    borderColor: '#4CAF50',
-    backgroundColor: '#E8F5E9',
+    borderColor: '#2C3E50',
+    backgroundColor: '#F4F6F8',
   },
   optionTitle: {
     fontSize: 16,
@@ -671,8 +671,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   modalityCardSelected: {
-    borderColor: '#4CAF50',
-    backgroundColor: '#4CAF50',
+    borderColor: '#2C3E50',
+    backgroundColor: '#2C3E50',
   },
   modalityLabel: {
     fontSize: 14,
@@ -697,8 +697,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   tagSelected: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
+    borderColor: '#2C3E50',
   },
   tagText: {
     fontSize: 14,
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -98,10 +98,10 @@ export default function StudentsScreen() {
 
   const getSupportLevelColor = (level: string) => {
     switch (level) {
-      case 'low': return '#4CAF50';
-      case 'medium': return '#FF9800';
-      case 'high': return '#F44336';
-      default: return '#9E9E9E';
+      case 'low': return '#27AE60';
+      case 'medium': return '#E67E22';
+      case 'high': return '#E74C3C';
+      default: return '#8B9DC3';
     }
   };
 
@@ -137,7 +137,7 @@ export default function StudentsScreen() {
           
           {isActive && (
             <View style={styles.activeIndicator}>
-              <Ionicons name="star" size={20} color="#4CAF50" />
+              <Ionicons name="star" size={20} color="#2C3E50" />
               <Text style={styles.activeText}>Active</Text>
             </View>
           )}
@@ -193,7 +193,7 @@ export default function StudentsScreen() {
               style={styles.setActiveButton}
               onPress={() => handleSetActiveProfile(profile.id)}
             >
-              <Ionicons name="star-outline" size={16} color="#4CAF50" />
+              <Ionicons name="star-outline" size={16} color="#2C3E50" />
               <Text style={styles.setActiveButtonText}>Set Active</Text>
             </TouchableOpacity>
           )}
@@ -202,7 +202,7 @@ export default function StudentsScreen() {
             style={styles.viewButton}
             onPress={() => router.push(`/student-detail/${profile.id}`)}
           >
-            <Ionicons name="eye-outline" size={16} color="#2196F3" />
+            <Ionicons name="eye-outline" size={16} color="#5DADE2" />
             <Text style={styles.viewButtonText}>View Details</Text>
           </TouchableOpacity>
           
@@ -222,9 +222,6 @@ export default function StudentsScreen() {
       {/* Header */}
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.headerTitle}>Student Profiles</ThemedText>
-        <ThemedText style={styles.headerSubtitle}>
-          Autism support profiles for personalized resources
-        </ThemedText>
       </ThemedView>
 
       {/* Stats Cards */}
@@ -273,7 +270,7 @@ export default function StudentsScreen() {
             {/* Real Dataset Notice */}
             <ThemedView style={styles.realDataNotice}>
               <View style={styles.noticeHeader}>
-                <Ionicons name="analytics" size={20} color="#4CAF50" />
+                <Ionicons name="analytics" size={20} color="#2C3E50" />
                 <Text style={styles.noticeTitle}>Real Autism Diagnosis Dataset Loaded</Text>
               </View>
               <View style={styles.noticeActions}>
@@ -307,7 +304,7 @@ export default function StudentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FAFBFC',
   },
   header: {
     padding: 20,
@@ -315,13 +312,16 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#34495E',
+    fontFamily: 'SF Pro Display',
+    letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#8B9DC3',
     marginTop: 4,
+    fontFamily: 'SF Pro Text',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -332,15 +332,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginHorizontal: 4,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F4F6F8',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#2C3E50',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
       },
       android: {
         elevation: 2,
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#2C3E50',
   },
   statLabel: {
     fontSize: 12,
@@ -363,7 +365,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   primaryButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -382,24 +384,26 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F4F6F8',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#2C3E50',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 4,
+        elevation: 3,
       },
     }),
   },
   activeProfileCard: {
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: '#2C3E50',
   },
   profileHeader: {
     flexDirection: 'row',
@@ -412,8 +416,10 @@ const styles = StyleSheet.create({
   },
   studentName: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#34495E',
+    fontFamily: 'SF Pro Display',
+    letterSpacing: -0.2,
   },
   profileMeta: {
     flexDirection: 'row',
@@ -422,16 +428,19 @@ const styles = StyleSheet.create({
   },
   ageText: {
     fontSize: 14,
-    color: '#666',
+    color: '#8B9DC3',
+    fontFamily: 'SF Pro Text',
   },
   separator: {
     fontSize: 14,
-    color: '#666',
+    color: '#8B9DC3',
     marginHorizontal: 8,
+    fontFamily: 'SF Pro Text',
   },
   sourceText: {
     fontSize: 14,
-    color: '#666',
+    color: '#8B9DC3',
+    fontFamily: 'SF Pro Text',
   },
   activeIndicator: {
     flexDirection: 'row',
@@ -443,7 +452,7 @@ const styles = StyleSheet.create({
   },
   activeText: {
     fontSize: 12,
-    color: '#4CAF50',
+    color: '#2C3E50',
     fontWeight: '600',
     marginLeft: 4,
   },
@@ -507,7 +516,7 @@ const styles = StyleSheet.create({
   },
   setActiveButtonText: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#2C3E50',
     fontWeight: '500',
     marginLeft: 4,
   },
@@ -550,7 +559,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   emptyStateButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
@@ -568,7 +577,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: '#2C3E50',
   },
   noticeHeader: {
     flexDirection: 'row',
@@ -583,7 +592,7 @@ const styles = StyleSheet.create({
   },
   noticeText: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#2C3E50',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -592,7 +601,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   noticeButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,

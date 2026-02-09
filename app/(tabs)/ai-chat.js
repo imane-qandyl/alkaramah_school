@@ -174,7 +174,7 @@ export default function AIChatScreen() {
       {/* Header */}
       <ThemedView style={styles.header}>
         <TouchableOpacity onPress={() => router.push('./')} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#4CAF50" />
+          <Ionicons name="arrow-back" size={24} color="#2C3E50" />
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
@@ -210,7 +210,7 @@ export default function AIChatScreen() {
             >
               {message.isAI && (
                 <View style={styles.aiIcon}>
-                  <Ionicons name="chatbubble-ellipses" size={16} color="#4CAF50" />
+                  <Ionicons name="chatbubble-ellipses" size={16} color="#2C3E50" />
                 </View>
               )}
               <Text
@@ -236,7 +236,7 @@ export default function AIChatScreen() {
         {isLoading && (
           <View style={styles.loadingContainer}>
             <View style={styles.loadingBubble}>
-              <ActivityIndicator size="small" color="#4CAF50" />
+              <ActivityIndicator size="small" color="#2C3E50" />
               <Text style={styles.loadingText}>AI is thinking...</Text>
             </View>
           </View>
@@ -278,7 +278,7 @@ export default function AIChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFBFC',
   },
   header: {
     flexDirection: 'row',
@@ -287,8 +287,11 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+    borderBottomColor: '#E1E8ED',
+    shadowColor: '#2C3E50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
   backButton: {
@@ -302,11 +305,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#34495E',
+    fontFamily: 'SF Pro Display',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#4CAF50',
+    color: '#2C3E50',
     marginTop: 2,
   },
   clearButton: {
@@ -337,11 +341,16 @@ const styles = StyleSheet.create({
   aiMessageBubble: {
     backgroundColor: '#fff',
     borderBottomLeftRadius: 4,
-    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
+    shadowColor: '#2C3E50',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
     elevation: 1,
+    borderWidth: 1,
+    borderColor: '#F4F6F8',
   },
   userMessageBubble: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     borderBottomRightRadius: 4,
   },
   aiIcon: {
@@ -359,8 +368,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   aiMessageText: {
-    color: '#333',
+    color: '#34495E',
     marginTop: 8,
+    fontFamily: 'SF Pro Text',
+    lineHeight: 22,
   },
   userMessageText: {
     color: '#fff',
@@ -370,7 +381,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   aiMessageTime: {
-    color: '#999',
+    color: '#8B9DC3',
   },
   userMessageTime: {
     color: 'rgba(255, 255, 255, 0.8)',
@@ -392,8 +403,9 @@ const styles = StyleSheet.create({
   loadingText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#666',
+    color: '#8B9DC3',
     fontStyle: 'italic',
+    fontFamily: 'SF Pro Text',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -401,21 +413,23 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: '#E1E8ED',
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E1E8ED',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     maxHeight: 100,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F4F6F8',
+    color: '#34495E',
+    fontFamily: 'SF Pro Text',
   },
   sendButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -424,6 +438,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   sendButtonDisabled: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#E1E8ED',
   },
 });

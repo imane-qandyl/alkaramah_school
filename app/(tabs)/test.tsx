@@ -108,11 +108,11 @@ export default function ResourceLibraryScreen() {
 
   const getResourceColor = (format?: string) => {
     switch (format) {
-      case 'worksheet': return '#4CAF50';
-      case 'cards': return '#2196F3';
-      case 'slides': return '#FF9800';
-      case 'checklist': return '#9C27B0';
-      default: return '#666';
+      case 'worksheet': return '#2C3E50';
+      case 'cards': return '#5DADE2';
+      case 'slides': return '#E67E22';
+      case 'checklist': return '#7FB8A3';
+      default: return '#8B9DC3';
     }
   };
 
@@ -239,29 +239,26 @@ export default function ResourceLibraryScreen() {
       {/* Header */}
       <ThemedView style={styles.header}>
         <ThemedText style={styles.headerTitle}>Resource Library</ThemedText>
-        <ThemedText style={styles.headerSubtitle}>
-          {user?.fullName ? `${user.fullName}'s` : 'Your'} created resources ({stats.total} total)
-        </ThemedText>
       </ThemedView>
 
       {/* Statistics Cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#4CAF50' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#2C3E50' }]}>
           <Ionicons name="library-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.total}</ThemedText>
-          <ThemedText style={styles.statLabel}>Total Resources</ThemedText>
+          <ThemedText style={styles.statLabel}>Total </ThemedText>
         </ThemedView>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#2196F3' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#5DADE2' }]}>
           <Ionicons name="document-text-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.worksheets}</ThemedText>
           <ThemedText style={styles.statLabel}>Worksheets</ThemedText>
         </ThemedView>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#FF9800' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#E67E22' }]}>
           <Ionicons name="images-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.cards}</ThemedText>
           <ThemedText style={styles.statLabel}>Activity Cards</ThemedText>
         </ThemedView>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#9C27B0' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#7FB8A3' }]}>
           <Ionicons name="easel-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.slides}</ThemedText>
           <ThemedText style={styles.statLabel}>Slides</ThemedText>
@@ -297,7 +294,7 @@ export default function ResourceLibraryScreen() {
             }))
           );
         }}>
-          <Ionicons name="funnel-outline" size={18} color="#4CAF50" />
+          <Ionicons name="funnel-outline" size={18} color="#2C3E50" />
           <ThemedText style={styles.sortText}>Sort</ThemedText>
         </TouchableOpacity>
       </ThemedView>
@@ -352,7 +349,7 @@ export default function ResourceLibraryScreen() {
                 <ThemedText style={styles.createButtonText}>Create Resource</ThemedText>
               </TouchableOpacity>
               
-              <TouchableOpacity style={[styles.createButton, { backgroundColor: '#2196F3', marginTop: 12 }]} onPress={async () => {
+              <TouchableOpacity style={[styles.createButton, { backgroundColor: '#5DADE2', marginTop: 12 }]} onPress={async () => {
                 try {
                   const { addSampleResources } = await import('@/scripts/addSampleData');
                   const result = await addSampleResources();
@@ -444,21 +441,21 @@ export default function ResourceLibraryScreen() {
           <TouchableOpacity style={styles.actionButton} onPress={() => {
             Alert.alert('Export All', 'Export all resources feature coming soon!');
           }}>
-            <Ionicons name="download-outline" size={20} color="#4CAF50" />
+            <Ionicons name="download-outline" size={20} color="#2C3E50" />
             <ThemedText style={styles.actionText}>Export All</ThemedText>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.actionButton} onPress={() => {
             Alert.alert('Share Library', 'Share library feature coming soon!');
           }}>
-            <Ionicons name="share-outline" size={20} color="#4CAF50" />
+            <Ionicons name="share-outline" size={20} color="#2C3E50" />
             <ThemedText style={styles.actionText}>Share Library</ThemedText>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.actionButton} onPress={() => {
             Alert.alert('Organize', 'Organization features coming soon!');
           }}>
-            <Ionicons name="folder-outline" size={20} color="#4CAF50" />
+            <Ionicons name="folder-outline" size={20} color="#2C3E50" />
             <ThemedText style={styles.actionText}>Organize</ThemedText>
           </TouchableOpacity>
         </ThemedView>
@@ -470,24 +467,27 @@ export default function ResourceLibraryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#FAFBFC',
   },
   header: {
     padding: 20,
     paddingTop: 60,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#E1E8ED',
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#212529',
+    fontWeight: '700',
+    color: '#34495E',
     marginBottom: 4,
+    fontFamily: 'SF Pro Display',
+    letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#8B9DC3',
+    fontFamily: 'SF Pro Text',
   },
   statsContainer: {
     paddingVertical: 16,
@@ -497,15 +497,15 @@ const styles = StyleSheet.create({
   statCard: {
     width: 120,
     height: 100,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: '#2C3E50',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 3,
   },
   statNumber: {
@@ -524,16 +524,18 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#E1E8ED',
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F4F6F8',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
   },
   searchIcon: {
     marginRight: 8,
@@ -541,7 +543,8 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#212529',
+    color: '#34495E',
+    fontFamily: 'SF Pro Text',
   },
   clearButton: {
     padding: 4,
@@ -552,15 +555,15 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F4F6F8',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: '#E1E8ED',
   },
   sortText: {
     marginLeft: 6,
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#2C3E50',
     fontWeight: '500',
   },
   filterContainer: {
@@ -568,25 +571,26 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#E1E8ED',
   },
   filterTab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F4F6F8',
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: '#E1E8ED',
   },
   activeFilterTab: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
+    borderColor: '#2C3E50',
   },
   filterText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#8B9DC3',
     fontWeight: '500',
+    fontFamily: 'SF Pro Text',
   },
   activeFilterText: {
     color: '#fff',
@@ -599,8 +603,9 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#8B9DC3',
     marginTop: 16,
+    fontFamily: 'SF Pro Text',
   },
   emptyContainer: {
     flex: 1,
@@ -611,21 +616,23 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#212529',
+    color: '#34495E',
     marginTop: 16,
     marginBottom: 8,
+    fontFamily: 'SF Pro Display',
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#8B9DC3',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 24,
+    fontFamily: 'SF Pro Text',
   },
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -641,16 +648,16 @@ const styles = StyleSheet.create({
   },
   resourceCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: '#2C3E50',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#f1f3f4',
+    borderColor: '#F4F6F8',
   },
   resourceHeader: {
     flexDirection: 'row',
@@ -672,15 +679,17 @@ const styles = StyleSheet.create({
   resourceTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#212529',
+    color: '#34495E',
     marginBottom: 4,
     lineHeight: 24,
+    fontFamily: 'SF Pro Display',
   },
   resourceTarget: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#8B9DC3',
     marginBottom: 12,
     lineHeight: 20,
+    fontFamily: 'SF Pro Text',
   },
   resourceMeta: {
     flexDirection: 'row',
@@ -702,17 +711,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#F4F6F8',
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
   },
   ageBadgeText: {
     fontSize: 12,
-    color: '#1976d2',
+    color: '#5DADE2',
     fontWeight: '500',
+    fontFamily: 'SF Pro Text',
   },
   resourceDate: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#8B9DC3',
+    fontFamily: 'SF Pro Text',
   },
   quickActions: {
     flexDirection: 'row',
@@ -720,7 +733,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
+    borderTopColor: '#E1E8ED',
     marginTop: 8,
   },
   actionButton: {
@@ -732,7 +745,8 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 12,
     marginTop: 6,
-    color: '#6c757d',
+    color: '#8B9DC3',
     fontWeight: '500',
+    fontFamily: 'SF Pro Text',
   },
 });

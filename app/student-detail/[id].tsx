@@ -80,10 +80,10 @@ export default function StudentDetailScreen() {
 
   const getSupportLevelColor = (level: string) => {
     switch (level) {
-      case 'low': return '#4CAF50';
-      case 'medium': return '#FF9800';
-      case 'high': return '#F44336';
-      default: return '#9E9E9E';
+      case 'low': return '#27AE60';
+      case 'medium': return '#E67E22';
+      case 'high': return '#E74C3C';
+      default: return '#8B9DC3';
     }
   };
 
@@ -115,11 +115,11 @@ export default function StudentDetailScreen() {
       {/* Header */}
       <ThemedView style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#4CAF50" />
+          <Ionicons name="arrow-back" size={24} color="#2C3E50" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Student Profile</ThemedText>
         <TouchableOpacity onPress={handleSetActive} style={styles.setActiveButton}>
-          <Ionicons name="star-outline" size={20} color="#4CAF50" />
+          <Ionicons name="star-outline" size={20} color="#2C3E50" />
           <Text style={styles.setActiveText}>Set Active</Text>
         </TouchableOpacity>
       </ThemedView>
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   },
   setActiveText: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#2C3E50',
     fontWeight: '500',
     marginLeft: 4,
   },
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   generateButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2C3E50',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backLink: {
-    color: '#4CAF50',
+    color: '#2C3E50',
     fontSize: 16,
     marginTop: 16,
   },

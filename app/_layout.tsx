@@ -26,9 +26,9 @@ function RootLayoutNav() {
   // Show loading screen while checking authentication
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F9FA' }}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFBFC' }}>
+        <ActivityIndicator size="large" color="#2C3E50" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#34495E', fontFamily: 'SF Pro Text' }}>Loading...</Text>
       </View>
     );
   }
