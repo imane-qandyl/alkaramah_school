@@ -6,24 +6,24 @@
 import OpenAI from 'openai';
 import Constants from 'expo-constants';
 import { trainedChatbotService } from './trainedChatbotService';
+import { azureConfig } from '../config/azure';
 
 class AIResourceGenerator {
   constructor() {
-    // Azure OpenAI Configuration - Use Expo Constants which includes app.json extra config
+    // Azure OpenAI Configuration - Use secure configuration
     const config = Constants.expoConfig?.extra?.azureOpenAI || {};
     
-    this.endpoint = config.endpoint || 'https://alkaramah-openai.openai.azure.com/';
-    this.apiKey = config.apiKey || null;
-    this.apiVersion = config.apiVersion || '2025-09-01';
-    this.deploymentName = config.deploymentName || 'gpt-4o';
+    this.endpoint = config.endpoint || azureConfig.endpoint;
+    this.apiKey = null; // Will be loaded asynchronously
+    this.apiVersion = config.apiVersion || azureConfig.apiVersion;
+    this.deploymentName = config.deploymentName || azureConfig.deploymentName;
     
     // Debug logging
     console.log('Azure OpenAI Configuration:');
     console.log('- Endpoint:', this.endpoint);
     console.log('- API Version:', this.apiVersion);
     console.log('- Deployment:', this.deploymentName);
-    console.log('- API Key present:', !!this.apiKey);
-    console.log('- API Key length:', this.apiKey ? this.apiKey.length : 0);
+    console.log('- API Key will be loaded securely');
     console.log('- Config object:', config);
     
     // Initialize Azure OpenAI client
@@ -34,8 +34,11 @@ class AIResourceGenerator {
   /**
    * Initialize Azure OpenAI client
    */
-  initializeClient() {
+  async initializeClient() {
     try {
+      // Load API key securely
+      this.apiKey = await azureConfig.getApiKey();
+      
       if (this.apiKey) {
         // Azure OpenAI endpoint format for OpenAI SDK
         this.client = new OpenAI({
@@ -49,6 +52,7 @@ class AIResourceGenerator {
         console.log('Azure OpenAI client initialized successfully');
         console.log('Base URL:', `${this.endpoint}openai/deployments/${this.deploymentName}`);
         console.log('API Version:', this.apiVersion);
+        console.log('API Key loaded:', !!this.apiKey);
       } else {
         console.warn('Azure OpenAI API key not provided, using mock responses');
       }
@@ -75,6 +79,11 @@ class AIResourceGenerator {
         }
       } catch (trainedError) {
         console.log('Trained chatbot not available, trying Azure OpenAI...', trainedError.message);
+      }
+
+      // Ensure Azure OpenAI client is initialized
+      if (!this.client && !this.apiKey) {
+        await this.initializeClient();
       }
 
       // Fallback to Azure OpenAI if available
@@ -561,10 +570,15 @@ ${activitiesText}
    */
   async testConnection() {
     try {
+      // Ensure client is initialized
+      if (!this.client && !this.apiKey) {
+        await this.initializeClient();
+      }
+
       if (!this.client || !this.apiKey) {
         return { 
           success: false, 
-          error: 'Azure OpenAI not configured. Please add your API key to the .env file.',
+          error: 'Azure OpenAI not configured. Please add your API key to the secure configuration.',
           config: this.getConfiguration()
         };
       }

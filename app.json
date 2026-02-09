@@ -30,7 +30,8 @@
       "favicon": "./assets/images/favico (2).png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
@@ -39,8 +40,7 @@
       "azureOpenAI": {
         "endpoint": "https://alkaramah-openai.openai.azure.com/",
         "apiVersion": "2024-02-15-preview",
-        "deploymentName": "chatbot",
-        "apiKey": "DjHnz08X38EqO7ujWuKDGNnDwAmYg7d8CAa0okXbc0QHXCb9bzFjJQQJ99CBACfhMk5XJ3w3AAABACOGiJCV"
+        "deploymentName": "chatbot"
       }
     }
   }
