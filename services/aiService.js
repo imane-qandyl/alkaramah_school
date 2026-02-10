@@ -7,6 +7,7 @@ import OpenAI from 'openai';
 import Constants from 'expo-constants';
 import { trainedChatbotService } from './trainedChatbotService';
 import { azureConfig } from '../config/azure';
+import { imageGenerationService } from './imageGenerationService';
 
 class AIResourceGenerator {
   constructor() {
@@ -51,11 +52,11 @@ class AIResourceGenerator {
   }
 
   /**
-   * Generate educational resource based on input parameters
+   * Generate educational resource with optional image generation
    * Tries trained chatbot first, then Azure OpenAI as fallback
    */
   async generateResource(params) {
-    const { studentAge, abilityLevel, aetTarget, learningContext, format, visualSupport, textLevel } = params;
+    const { studentAge, abilityLevel, aetTarget, learningContext, format, visualSupport, textLevel, includeImages = false } = params;
 
     try {
       // First, try the trained chatbot model
@@ -65,6 +66,16 @@ class AIResourceGenerator {
       
       if (trainedResult.success) {
         console.log('✅ Generated resource using trained chatbot model');
+        
+        // If images are requested and the resource includes activities, generate images
+        if (includeImages && trainedResult.content) {
+          const imageResult = await this.generateImagesForResource(trainedResult.content, params);
+          if (imageResult.success) {
+            trainedResult.images = imageResult.images;
+            trainedResult.metadata.imagesGenerated = imageResult.images.length;
+          }
+        }
+        
         return trainedResult;
       } else {
         console.log('ℹ️  Trained chatbot unavailable:', trainedResult.fallbackReason);
@@ -83,7 +94,7 @@ class AIResourceGenerator {
         console.log('🔄 Falling back to Azure OpenAI...');
         const response = await this.callAzureOpenAI(params);
         
-        return {
+        const result = {
           success: true,
           content: response.content,
           metadata: {
@@ -95,6 +106,17 @@ class AIResourceGenerator {
             provider: 'Azure OpenAI'
           }
         };
+
+        // If images are requested, generate them
+        if (includeImages && response.content) {
+          const imageResult = await this.generateImagesForResource(response.content, params);
+          if (imageResult.success) {
+            result.images = imageResult.images;
+            result.metadata.imagesGenerated = imageResult.images.length;
+          }
+        }
+        
+        return result;
       } else {
         // No AI services available
         return {
@@ -325,12 +347,108 @@ AUTISM-FRIENDLY PRINCIPLES:
   }
 
   /**
-   * Test all available AI services
+   * Generate images for educational resource content
+   */
+  async generateImagesForResource(content, params) {
+    if (!imageGenerationService.isAvailable()) {
+      console.log('📷 Image generation service not available');
+      return {
+        success: false,
+        error: 'Image generation service not configured',
+        images: []
+      };
+    }
+
+    try {
+      // Extract activities/actions from the content
+      const actions = this.extractActionsFromContent(content);
+      
+      if (actions.length === 0) {
+        console.log('📷 No actions found in content for image generation');
+        return {
+          success: true,
+          images: [],
+          message: 'No actions identified for image generation'
+        };
+      }
+
+      console.log(`📷 Generating images for ${actions.length} actions...`);
+      
+      const result = await imageGenerationService.generateImageSequence(actions, {
+        size: '768x768',
+        styleNote: `Educational material for ${params.studentAge} year old with ${params.abilityLevel} ability level`,
+        maxConcurrent: 2 // Limit concurrent requests
+      });
+
+      return {
+        success: result.success,
+        images: result.results || [],
+        summary: result.summary,
+        error: result.success ? null : 'Some images failed to generate'
+      };
+    } catch (error) {
+      console.error('Image generation error:', error);
+      return {
+        success: false,
+        error: 'Failed to generate images for resource',
+        images: []
+      };
+    }
+  }
+
+  /**
+   * Extract actionable items from educational content for image generation
+   */
+  extractActionsFromContent(content) {
+    if (!content || typeof content !== 'string') {
+      return [];
+    }
+
+    const actions = [];
+    
+    // Look for numbered steps or bullet points that describe actions
+    const stepPatterns = [
+      /\d+\.\s*([^.\n]+(?:ing|ed|s)\s[^.\n]*)/gi, // Numbered steps with action words
+      /[-•]\s*([^.\n]+(?:ing|ed|s)\s[^.\n]*)/gi,  // Bullet points with action words
+      /Step \d+:\s*([^.\n]+)/gi,                   // "Step X:" format
+      /Activity:\s*([^.\n]+)/gi,                   // "Activity:" format
+    ];
+
+    stepPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const action = match[1].trim();
+        if (action.length > 10 && action.length < 100) { // Reasonable length for actions
+          actions.push(action);
+        }
+      }
+    });
+
+    // Remove duplicates and clean up
+    const uniqueActions = [...new Set(actions)]
+      .map(action => action.replace(/[^\w\s]/g, '').trim())
+      .filter(action => action.length > 5);
+
+    return uniqueActions.slice(0, 6); // Limit to 6 images max
+  }
+
+  /**
+   * Generate a single educational image
+   */
+  async generateSingleImage(action, options = {}) {
+    return await imageGenerationService.generateEducationalImage({
+      action,
+      ...options
+    });
+  }
+  /**
+   * Test all available AI services including image generation
    */
   async testAllConnections() {
     const results = {
       trainedChatbot: null,
       azureOpenAI: null,
+      imageGeneration: null,
       mock: { success: true, message: 'Mock service always available' }
     };
 
@@ -357,6 +475,18 @@ AUTISM-FRIENDLY PRINCIPLES:
       };
     }
 
+    // Test image generation
+    try {
+      console.log('Testing image generation service...');
+      results.imageGeneration = await imageGenerationService.testConnection();
+    } catch (error) {
+      results.imageGeneration = {
+        success: false,
+        error: error.message,
+        suggestion: 'Configure SDK_BASE_URL and SDK_API_KEY environment variables'
+      };
+    }
+
     return results;
   }
 
@@ -365,6 +495,7 @@ AUTISM-FRIENDLY PRINCIPLES:
    */
   getConfiguration() {
     const trainedStatus = trainedChatbotService.getStatus();
+    const imageStatus = imageGenerationService.getStatus();
     
     return {
       azureOpenAI: {
@@ -375,6 +506,11 @@ AUTISM-FRIENDLY PRINCIPLES:
         available: trainedStatus.available,
         serverUrl: trainedStatus.serverUrl,
         provider: trainedStatus.provider
+      },
+      imageGeneration: {
+        available: imageStatus.available,
+        baseUrl: imageStatus.baseUrl,
+        provider: imageStatus.provider
       }
     };
   }

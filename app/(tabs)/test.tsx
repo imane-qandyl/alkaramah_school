@@ -11,6 +11,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import ResourceEditor from '@/components/ResourceEditor';
 import CreateResourceModal from '@/components/CreateResourceModal';
+import ImageGenerationExample from '@/components/ImageGenerationExample';
+import ImageGenerationSetup from '@/components/ImageGenerationSetup';
 
 interface Resource {
   id: string;
@@ -40,6 +42,8 @@ export default function ResourceLibraryScreen() {
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImageGeneration, setShowImageGeneration] = useState(false);
+  const [showImageSetup, setShowImageSetup] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
 
   const filterOptions = ['All', 'AI Generated', 'Manual Created', 'Templates', 'Worksheets', 'Activity Cards', 'Slides', 'Checklists'];
@@ -296,6 +300,47 @@ export default function ResourceLibraryScreen() {
     return stats;
   };
 
+  if (showImageSetup) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setShowImageSetup(false)}
+          >
+            <Ionicons name="arrow-back" size={24} color="#2C3E50" />
+          </TouchableOpacity>
+          <ThemedText type="title" style={styles.headerTitle}>Image Setup</ThemedText>
+        </View>
+        <ScrollView>
+          <ImageGenerationSetup onSetupComplete={(success) => {
+            if (success) {
+              setShowImageSetup(false);
+              setShowImageGeneration(true);
+            }
+          }} />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (showImageGeneration) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setShowImageGeneration(false)}
+          >
+            <Ionicons name="arrow-back" size={24} color="#2C3E50" />
+          </TouchableOpacity>
+          <ThemedText type="title" style={styles.headerTitle}>Image Generation</ThemedText>
+        </View>
+        <ImageGenerationExample />
+      </SafeAreaView>
+    );
+  }
+
   if (showEditor && selectedResource) {
     return (
       <ResourceEditor
@@ -546,6 +591,16 @@ export default function ResourceLibraryScreen() {
             <ThemedText style={styles.actionText}>Organize</ThemedText>
           </TouchableOpacity>
           
+          <TouchableOpacity style={styles.actionButton} onPress={() => setShowImageGeneration(true)}>
+            <Ionicons name="image-outline" size={20} color="#2C3E50" />
+            <ThemedText style={styles.actionText}>Generate Images</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={() => setShowImageSetup(true)}>
+            <Ionicons name="settings-outline" size={20} color="#2C3E50" />
+            <ThemedText style={styles.actionText}>Image Setup</ThemedText>
+          </TouchableOpacity>
+          
 
         </ThemedView>
       )}
@@ -585,6 +640,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 16,
+    padding: 8,
   },
   headerTitle: {
     fontSize: 28,

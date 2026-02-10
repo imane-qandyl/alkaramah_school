@@ -11,7 +11,8 @@ import {
   Alert,
   ActivityIndicator,
   Keyboard,
-  Dimensions
+  Dimensions,
+  Image
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -21,6 +22,7 @@ import { exportService } from '@/services/exportService';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { conversationHistoryService } from '@/services/conversationHistoryService';
+import { imageGenerationService } from '@/services/imageGenerationService';
 
 export default function AIChatScreen() {
   const router = useRouter();
@@ -76,6 +78,7 @@ Some suggestions:
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [allowInputFocus, setAllowInputFocus] = useState(false);
   const [exportingMessageId, setExportingMessageId] = useState(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Keyboard event listeners
   useEffect(() => {
@@ -166,70 +169,30 @@ Some suggestions:
     }, 100);
 
     try {
-      // Generate AI response using the same service as resource creation
-      const aiResponse = await generateAIResponse(currentInput);
+      // Check if user is requesting image generation
+      const isImageRequest = detectImageRequest(currentInput);
+      console.log(`🔍 Input: "${currentInput}"`);
+      console.log(`🔍 Is Image Request: ${isImageRequest}`);
       
-      const aiMessage = {
-        id: Date.now() + 1,
-        text: aiResponse,
-        isAI: true,
-        timestamp: new Date()
-      };
+      if (isImageRequest) {
+        console.log('🎨 Handling image generation...');
+        await handleImageGeneration(currentInput);
+      } else {
+        console.log('💬 Handling regular AI response...');
+        // Generate AI response using the same service as resource creation
+        const aiResponse = await generateAIResponse(currentInput);
+        
+        const aiMessage = {
+          id: Date.now() + 1,
+          text: aiResponse,
+          isAI: true,
+          timestamp: new Date()
+        };
 
-      setMessages(prev => [...prev, aiMessage]);
+        setMessages(prev => [...prev, aiMessage]);
 
-      // Save conversation to history
-      try {
-        if (currentStudent) {
-          // Save with student context
-          await conversationHistoryService.saveConversation(currentStudent.id, {
-            userMessage: currentInput,
-            aiResponse: aiResponse,
-            studentContext: currentStudent,
-            metadata: {
-              provider: 'Trained Chatbot Model',
-              timestamp: new Date().toISOString(),
-              studentName: currentStudent.name,
-              studentAge: currentStudent.age
-            }
-          });
-          console.log(`💾 Saved conversation for student: ${currentStudent.name} (ID: ${currentStudent.id})`);
-        } else {
-          // Save general conversation with a default ID
-          const generalId = 'general_conversations';
-          await conversationHistoryService.saveConversation(generalId, {
-            userMessage: currentInput,
-            aiResponse: aiResponse,
-            studentContext: null,
-            metadata: {
-              provider: 'Trained Chatbot Model',
-              timestamp: new Date().toISOString(),
-              studentName: 'General Chat',
-              studentAge: null
-            }
-          });
-          console.log('💾 Saved general conversation');
-        }
-      } catch (error) {
-        console.error('❌ Error saving conversation:', error);
-        // Try to save to a backup location
-        try {
-          const backupId = currentStudent?.id || 'backup_conversations';
-          console.log(`🔄 Attempting backup save for: ${backupId}`);
-          // Simple backup save without complex metadata
-          await conversationHistoryService.saveConversation(backupId, {
-            userMessage: currentInput,
-            aiResponse: aiResponse,
-            studentContext: currentStudent,
-            metadata: {
-              provider: 'Backup Save',
-              timestamp: new Date().toISOString()
-            }
-          });
-          console.log('✅ Backup save successful');
-        } catch (backupError) {
-          console.error('❌ Backup save also failed:', backupError);
-        }
+        // Save conversation to history
+        await saveConversationHistory(currentInput, aiResponse);
       }
     } catch (error) {
       console.error('Error getting AI response:', error);
@@ -262,10 +225,10 @@ Some suggestions:
       const randomResponse = greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
       
       if (currentStudent) {
-        return `${randomResponse}\n\nI can see you're working with ${currentStudent.name} (Age: ${currentStudent.age}). I have access to their profile and can create personalized resources for them. What would you like to focus on?`;
+        return `${randomResponse}\n\nI can see you're working with ${currentStudent.name} (Age: ${currentStudent.age}). I have access to their profile and can create personalized resources for them. What would you like to focus on?\n\n💡 You can also ask me to generate images by saying things like "create an image of brushing teeth" or "generate a picture for morning routine"`;
       }
       
-      return randomResponse;
+      return randomResponse + "\n\n💡 You can also ask me to generate images by saying things like \"create an image of brushing teeth\" or \"generate a picture for morning routine\"";
     }
     
     // Create a chat-style prompt for the AI service with student context
@@ -335,7 +298,223 @@ Some suggestions:
       } else if (input.includes('lesson') || input.includes('plan')) {
         return "For effective lesson planning:\n\n• Start with clear learning objectives\n• Include multiple learning styles\n• Plan for different ability levels\n• Build in movement breaks\n• Prepare visual supports\n\nWhat subject or topic are you planning for?";
       } else {
-        return "I'm here to help with autism education and teaching strategies. Could you tell me more about what you're looking for? For example:\n\n• Lesson planning help\n• Behavior management strategies\n• AET target suggestions\n• Classroom adaptations";
+        return "I'm here to help with autism education and teaching strategies. Could you tell me more about what you're looking for? For example:\n\n• Lesson planning help\n• Behavior management strategies\n• AET target suggestions\n• Classroom adaptations\n• Image generation for visual supports";
+      }
+    }
+  };
+
+  // Detect if user is requesting image generation
+  const detectImageRequest = (input) => {
+    const imageKeywords = [
+      'generate image', 'create image', 'make image', 'draw image',
+      'generate picture', 'create picture', 'make picture', 'draw picture',
+      'show me image', 'show me picture', 'visual', 'illustration',
+      'generate visual', 'create visual', 'make visual',
+      'image of', 'picture of', 'visual of'
+    ];
+    
+    const lowerInput = input.toLowerCase();
+    return imageKeywords.some(keyword => lowerInput.includes(keyword));
+  };
+
+  // Handle image generation requests
+  const handleImageGeneration = async (userInput) => {
+    setIsGeneratingImage(true);
+    
+    try {
+      // Extract action from user input
+      const action = extractActionFromInput(userInput);
+      console.log(`🎨 Extracted action: "${action}"`);
+      
+      if (!action) {
+        const clarificationMessage = {
+          id: Date.now() + 1,
+          text: "I'd be happy to generate an image for you! Could you please specify what action or activity you'd like me to illustrate? For example:\n\n• 'Generate an image of brushing teeth'\n• 'Create a picture of washing hands'\n• 'Show me a visual for morning routine'\n• 'Make an image of a child reading'",
+          isAI: true,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, clarificationMessage]);
+        return;
+      }
+
+      // Check service availability first
+      const isAvailable = await imageGenerationService.isAvailable();
+      console.log(`🔍 Service available: ${isAvailable}`);
+
+      if (!isAvailable) {
+        const configMessage = {
+          id: Date.now() + 1,
+          text: "The image generation service is not properly configured. Please check your configuration and try again.",
+          isAI: true,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, configMessage]);
+        return;
+      }
+
+      // Show generating message
+      const generatingMessage = {
+        id: Date.now() + 1,
+        text: `🎨 Generating an autism-friendly image of "${action}"...\n\nThis may take a moment. I'm creating a clear, educational illustration with soft colors and minimal distractions.`,
+        isAI: true,
+        timestamp: new Date(),
+        isGenerating: true
+      };
+      setMessages(prev => [...prev, generatingMessage]);
+
+      console.log(`🎨 Starting image generation for: "${action}"`);
+
+      // Generate the image
+      const result = await imageGenerationService.generateEducationalImage({
+        action: action,
+        size: '768x768',
+        styleNote: 'autism-friendly educational style'
+      });
+
+      console.log(`🎨 Image generation result:`, result);
+
+      // Remove the generating message
+      setMessages(prev => prev.filter(msg => !msg.isGenerating));
+
+      if (result.success && result.image) {
+        const imageMessage = {
+          id: Date.now() + 2,
+          text: `Here's your autism-friendly image of "${action}":`,
+          isAI: true,
+          timestamp: new Date(),
+          image: result.image,
+          imageMetadata: result.metadata
+        };
+        setMessages(prev => [...prev, imageMessage]);
+
+        // Save conversation with image
+        await saveConversationHistory(
+          userInput, 
+          `Generated image: ${action}`,
+          { imageGenerated: true, action: action }
+        );
+      } else {
+        console.error(`🎨 Image generation failed:`, result);
+        const errorMessage = {
+          id: Date.now() + 2,
+          text: `I apologize, but I couldn't generate the image right now. Error: ${result.error || 'Unknown error'}\n\nDetails: ${result.details || 'No additional details'}\n\nPlease try again or check if the image generation service is configured properly.`,
+          isAI: true,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('🎨 Image generation error:', error);
+      console.error('🎨 Error stack:', error.stack);
+      const errorMessage = {
+        id: Date.now() + 2,
+        text: `I encountered an error while generating the image: ${error.message}\n\nPlease make sure the image generation service is properly configured and try again.`,
+        isAI: true,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  // Extract action from user input
+  const extractActionFromInput = (input) => {
+    const lowerInput = input.toLowerCase();
+    
+    // Remove common prefixes
+    let action = lowerInput
+      .replace(/^(generate|create|make|draw|show me|give me)\s+(an?\s+)?(image|picture|visual|illustration)\s+(of|for|showing)\s+/i, '')
+      .replace(/^(generate|create|make|draw|show me|give me)\s+(an?\s+)?(image|picture|visual|illustration)\s+/i, '')
+      .replace(/^(image|picture|visual|illustration)\s+(of|for|showing)\s+/i, '')
+      .replace(/^(an?\s+)/i, '') // Remove "a" or "an"
+      .trim();
+
+    // If no clear action found, try to extract from context
+    if (!action || action.length < 3) {
+      // Look for common activities
+      const activities = [
+        'brushing teeth', 'washing hands', 'eating', 'drinking', 'reading',
+        'writing', 'playing', 'walking', 'running', 'sitting', 'standing',
+        'morning routine', 'bedtime routine', 'getting dressed', 'taking a bath',
+        'homework', 'studying', 'listening', 'talking', 'sharing', 'helping',
+        'child brushing teeth', 'child washing hands', 'child eating', 'child reading'
+      ];
+      
+      for (const activity of activities) {
+        if (lowerInput.includes(activity)) {
+          action = activity;
+          break;
+        }
+      }
+    }
+
+    // Clean up the action
+    if (action) {
+      // Remove extra words that might interfere
+      action = action
+        .replace(/\s+/g, ' ') // Multiple spaces to single space
+        .trim();
+    }
+
+    return action || null;
+  };
+
+  // Save conversation history
+  const saveConversationHistory = async (userInput, aiResponse, extraMetadata = {}) => {
+    try {
+      if (currentStudent) {
+        // Save with student context
+        await conversationHistoryService.saveConversation(currentStudent.id, {
+          userMessage: userInput,
+          aiResponse: aiResponse,
+          studentContext: currentStudent,
+          metadata: {
+            provider: 'Trained Chatbot Model',
+            timestamp: new Date().toISOString(),
+            studentName: currentStudent.name,
+            studentAge: currentStudent.age,
+            ...extraMetadata
+          }
+        });
+        console.log(`💾 Saved conversation for student: ${currentStudent.name} (ID: ${currentStudent.id})`);
+      } else {
+        // Save general conversation with a default ID
+        const generalId = 'general_conversations';
+        await conversationHistoryService.saveConversation(generalId, {
+          userMessage: userInput,
+          aiResponse: aiResponse,
+          studentContext: null,
+          metadata: {
+            provider: 'Trained Chatbot Model',
+            timestamp: new Date().toISOString(),
+            studentName: 'General Chat',
+            studentAge: null,
+            ...extraMetadata
+          }
+        });
+        console.log('💾 Saved general conversation');
+      }
+    } catch (error) {
+      console.error('❌ Error saving conversation:', error);
+      // Try to save to a backup location
+      try {
+        const backupId = currentStudent?.id || 'backup_conversations';
+        console.log(`🔄 Attempting backup save for: ${backupId}`);
+        // Simple backup save without complex metadata
+        await conversationHistoryService.saveConversation(backupId, {
+          userMessage: userInput,
+          aiResponse: aiResponse,
+          studentContext: currentStudent,
+          metadata: {
+            provider: 'Backup Save',
+            timestamp: new Date().toISOString(),
+            ...extraMetadata
+          }
+        });
+        console.log('✅ Backup save successful');
+      } catch (backupError) {
+        console.error('❌ Backup save also failed:', backupError);
       }
     }
   };
@@ -507,6 +686,28 @@ Some suggestions:
               >
                 {message.text}
               </Text>
+              
+              {/* Display generated image if present */}
+              {message.image && (
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{ uri: message.image }}
+                    style={styles.generatedImage}
+                    resizeMode="contain"
+                  />
+                  {message.imageMetadata && (
+                    <View style={styles.imageMetadata}>
+                      <Text style={styles.imageMetadataText}>
+                        Action: {message.imageMetadata.action}
+                      </Text>
+                      <Text style={styles.imageMetadataText}>
+                        Size: {message.imageMetadata.size}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+              
               <View style={styles.messageFooter}>
                 <Text
                   style={[
@@ -538,11 +739,13 @@ Some suggestions:
           </View>
         ))}
         
-        {isLoading && (
+        {(isLoading || isGeneratingImage) && (
           <View style={styles.loadingContainer}>
             <View style={styles.loadingBubble}>
               <ActivityIndicator size="small" color="#2C3E50" />
-              <Text style={styles.loadingText}>AI is thinking...</Text>
+              <Text style={styles.loadingText}>
+                {isGeneratingImage ? "🎨 Generating image..." : "AI is thinking..."}
+              </Text>
             </View>
           </View>
         )}
@@ -561,7 +764,7 @@ Some suggestions:
             value={inputText}
             onChangeText={setInputText}
             placeholder={allowInputFocus ? 
-              "Ask me about autism education, lesson plans, strategies..." : 
+              "Ask me about autism education, lesson plans, strategies, or say 'generate image of...' for visuals" : 
               "Loading..."
             }
             placeholderTextColor="#999"
@@ -805,5 +1008,25 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: '#E1E8ED',
+  },
+  imageContainer: {
+    marginTop: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#f8f9fa',
+  },
+  generatedImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+  },
+  imageMetadata: {
+    padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  imageMetadataText: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginBottom: 2,
   },
 });

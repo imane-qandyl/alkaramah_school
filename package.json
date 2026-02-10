@@ -12,7 +12,11 @@
     "test-server": "node scripts/testPythonServer.js",
     "server-status": "node scripts/testPythonServer.js --status",
     "add-sample-data": "node scripts/addSampleData.js",
-    "setup-azure": "node scripts/setupApiKey.js"
+    "setup-azure": "node scripts/setupApiKey.js",
+    "setup-images": "node scripts/setupImageGeneration.js",
+    "image-status": "node scripts/setupImageGeneration.js status",
+    "clear-image-config": "node scripts/setupImageGeneration.js clear",
+    "test-images": "node scripts/testImageGeneration.js"
   },
   "dependencies": {
     "@azure/openai": "^2.0.0",
@@ -32,6 +36,7 @@
     "expo-status-bar": "~3.0.9",
     "expo-system-ui": "~6.0.9",
     "expo-web-browser": "~15.0.10",
+    "node-fetch": "^3.3.2",
     "openai": "^6.18.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",

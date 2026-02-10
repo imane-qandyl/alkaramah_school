@@ -4,6 +4,7 @@ import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { trainedChatbotService } from '@/services/trainedChatbotService';
+import { imageGenerationService } from '@/services/imageGenerationService';
 
 interface AIServiceStatusProps {
   style?: any;
@@ -14,6 +15,7 @@ export default function AIServiceStatus({ style, showDetails = false }: AIServic
   const [status, setStatus] = useState({
     trainedChatbot: false,
     azureOpenAI: false,
+    imageGeneration: false,
     currentProvider: 'Mock'
   });
 
@@ -27,6 +29,9 @@ export default function AIServiceStatus({ style, showDetails = false }: AIServic
       await trainedChatbotService.checkServerAvailability();
       const trainedStatus = trainedChatbotService.getStatus();
       
+      // Check image generation service
+      const imageStatus = imageGenerationService.getStatus();
+      
       // For now, we'll assume Azure OpenAI is configured if API key exists
       // In a real app, you'd check the actual service
       const azureConfigured = false; // This would check if Azure OpenAI is properly configured
@@ -34,6 +39,7 @@ export default function AIServiceStatus({ style, showDetails = false }: AIServic
       setStatus({
         trainedChatbot: trainedStatus.available,
         azureOpenAI: azureConfigured,
+        imageGeneration: imageStatus.available,
         currentProvider: trainedStatus.available ? 'Trained Model' : 
                         azureConfigured ? 'Azure OpenAI' : 'Mock'
       });
@@ -49,10 +55,12 @@ export default function AIServiceStatus({ style, showDetails = false }: AIServic
 
 🤖 Trained Chatbot: ${status.trainedChatbot ? '✅ Available' : '❌ Not Available'}
 ☁️ Azure OpenAI: ${status.azureOpenAI ? '✅ Available' : '❌ Not Available'}
+🎨 Image Generation: ${status.imageGeneration ? '✅ Available' : '❌ Not Available'}
 
 Current Provider: ${status.currentProvider}
 
-${!status.trainedChatbot ? '\n💡 To use the trained model, start the Python server:\npython python-server/chatbot_server.py' : ''}`;
+${!status.trainedChatbot ? '\n💡 To use the trained model, start the Python server:\npython python-server/chatbot_server.py' : ''}
+${!status.imageGeneration ? '\n🎨 To use image generation, configure SDK_BASE_URL and SDK_API_KEY' : ''}`;
 
     Alert.alert('AI Service Status', statusMessage);
   };
@@ -119,6 +127,15 @@ ${!status.trainedChatbot ? '\n💡 To use the trained model, start the Python se
               color={status.azureOpenAI ? '#27AE60' : '#E74C3C'} 
             />
             <ThemedText style={styles.serviceText}>Azure OpenAI</ThemedText>
+          </View>
+
+          <View style={styles.serviceItem}>
+            <Ionicons 
+              name={status.imageGeneration ? 'checkmark-circle' : 'close-circle'} 
+              size={14} 
+              color={status.imageGeneration ? '#27AE60' : '#E74C3C'} 
+            />
+            <ThemedText style={styles.serviceText}>Image Generation</ThemedText>
           </View>
         </View>
         
