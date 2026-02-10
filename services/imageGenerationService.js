@@ -100,21 +100,28 @@ class ImageGenerationService {
   }
 
   /**
-   * Generate autism-friendly educational image
+   * Generate enhanced autism-friendly image with advanced features
    */
-  async generateEducationalImage(params) {
-    const { action, styleNote, size = "768x768" } = params;
+  async generateEnhancedImage(params) {
+    const {
+      action,
+      stylePreset = 'autism-friendly',
+      qualityLevel = 'child-friendly',
+      customStyle = '',
+      size = '768x768',
+      generateVariations = false
+    } = params;
 
-    console.log(`🎨 [Service] generateEducationalImage called with:`, params);
+    console.log(`🎨 [Enhanced Service] generateEnhancedImage called with:`, params);
 
     const isAvailable = await this.isAvailable();
-    console.log(`🎨 [Service] Service available: ${isAvailable}`);
+    console.log(`🎨 [Enhanced Service] Service available: ${isAvailable}`);
 
     if (!isAvailable) {
-      console.log(`🎨 [Service] Service not available - baseUrl: ${this.baseUrl}, apiKey: ${this.apiKey ? 'set' : 'not set'}`);
+      console.log(`🎨 [Enhanced Service] Service not available`);
       return {
         success: false,
-        error: 'Image generation service not configured',
+        error: 'Enhanced image generation service not configured',
         suggestion: 'Please configure Z AI SDK base URL and API key'
       };
     }
@@ -122,58 +129,301 @@ class ImageGenerationService {
     if (!action) {
       return {
         success: false,
-        error: 'Action description is required for image generation'
-      };
-    }
-
-    const validSizes = ["768x768", "1024x1024"];
-    if (!validSizes.includes(size)) {
-      return {
-        success: false,
-        error: `Invalid size. Must be one of: ${validSizes.join(", ")}`
+        error: 'Action description is required for enhanced image generation'
       };
     }
 
     try {
-      const prompt = this.buildAutismFriendlyPrompt(action, styleNote);
-      console.log(`🎨 [Service] Generated prompt: ${prompt.substring(0, 100)}...`);
-      
-      console.log('🎨 [Service] Generating autism-friendly image for action:', action);
-      
-      const response = await this.callImageGenerationAPI({
-        prompt,
-        size,
-        n: 1
-      });
-
-      console.log(`🎨 [Service] API response:`, response);
-
-      if (response.success && response.image) {
-        return {
-          success: true,
-          image: response.image,
-          metadata: {
-            action,
-            size,
-            generatedAt: new Date().toISOString(),
-            provider: 'Z AI SDK'
-          }
-        };
+      if (generateVariations) {
+        return await this.generateStyleVariations(action);
       } else {
-        return {
-          success: false,
-          error: response.error || 'Failed to generate image',
-          details: response.details
-        };
+        const enhancedPrompt = this.buildEnhancedPrompt(action, stylePreset, qualityLevel, customStyle);
+        console.log(`🎨 [Enhanced Service] Generated enhanced prompt: ${enhancedPrompt.substring(0, 100)}...`);
+        
+        const response = await this.callImageGenerationAPI({
+          prompt: enhancedPrompt,
+          size,
+          n: 1
+        });
+
+        if (response.success && response.image) {
+          return {
+            success: true,
+            image: response.image,
+            metadata: {
+              action,
+              stylePreset,
+              qualityLevel,
+              size,
+              generatedAt: new Date().toISOString(),
+              provider: 'Enhanced Z AI SDK',
+              enhanced: true
+            }
+          };
+        } else {
+          return {
+            success: false,
+            error: response.error || 'Failed to generate enhanced image',
+            details: response.details
+          };
+        }
       }
     } catch (error) {
-      console.error('🎨 [Service] Image generation error:', error);
+      console.error('🎨 [Enhanced Service] Enhanced image generation error:', error);
       return {
         success: false,
-        error: 'Image generation failed',
+        error: 'Enhanced image generation failed',
         details: error.message
       };
     }
+  }
+
+  /**
+   * Build enhanced prompt with style presets and quality levels
+   */
+  buildEnhancedPrompt(action, stylePreset, qualityLevel, customStyle) {
+    const stylePresets = {
+      'autism-friendly': {
+        baseStyle: 'Simple, clear illustration with soft pastel colors',
+        colorPalette: 'muted blues, gentle greens, warm yellows, soft pinks',
+        composition: 'uncluttered, centered subject, minimal background',
+        lighting: 'soft, even lighting without harsh shadows',
+        details: 'clear facial expressions, recognizable objects, no text overlays'
+      },
+      'visual-schedule': {
+        baseStyle: 'Educational visual schedule card style',
+        colorPalette: 'consistent color scheme, high contrast for clarity',
+        composition: 'square format, child-centered, action clearly visible',
+        lighting: 'bright, cheerful lighting',
+        details: 'step-by-step friendly, sequential action representation'
+      },
+      'sensory-friendly': {
+        baseStyle: 'Calming, sensory-friendly illustration',
+        colorPalette: 'earth tones, avoiding overstimulating colors',
+        composition: 'balanced, symmetrical when possible',
+        lighting: 'gentle, natural lighting',
+        details: 'smooth textures, avoiding busy patterns'
+      },
+      'social-story': {
+        baseStyle: 'Social story illustration style',
+        colorPalette: 'warm, inviting colors',
+        composition: 'clear social context, multiple subjects when needed',
+        lighting: 'natural, realistic lighting',
+        details: 'clear emotions, social cues, contextual environment'
+      }
+    };
+
+    const qualityEnhancements = {
+      'child-friendly': 'cartoon-like, approachable, non-threatening appearance',
+      'high-detail': 'highly detailed, crisp lines, professional illustration quality',
+      'realistic': 'photorealistic style while maintaining simplicity',
+      'minimalist': 'clean, minimal design with essential elements only',
+      'inclusive': 'diverse representation, inclusive of different abilities and backgrounds'
+    };
+
+    const preset = stylePresets[stylePreset] || stylePresets['autism-friendly'];
+    const quality = qualityEnhancements[qualityLevel] || qualityEnhancements['child-friendly'];
+
+    const corePrompt = `A child performing this action: "${action}"`;
+    
+    const styleElements = [
+      preset.baseStyle,
+      `Color palette: ${preset.colorPalette}`,
+      `Composition: ${preset.composition}`,
+      `Lighting: ${preset.lighting}`,
+      `Details: ${preset.details}`,
+      `Quality: ${quality}`
+    ];
+
+    const enhancedPrompt = [
+      corePrompt,
+      ...styleElements,
+      customStyle,
+      'Professional illustration, suitable for educational use with autistic children',
+      'No text, labels, or written words in the image'
+    ].filter(Boolean).join('. ');
+
+    return enhancedPrompt;
+  }
+
+  /**
+   * Generate style variations
+   */
+  async generateStyleVariations(action, styles = ['autism-friendly', 'visual-schedule', 'sensory-friendly']) {
+    console.log(`🎨 Generating style variations for: ${action}`);
+    
+    const variations = [];
+    
+    for (const style of styles) {
+      try {
+        const result = await this.generateEnhancedImage({
+          action,
+          stylePreset: style,
+          qualityLevel: 'child-friendly'
+        });
+        
+        variations.push({
+          style,
+          success: result.success,
+          image: result.image,
+          metadata: result.metadata,
+          error: result.error
+        });
+      } catch (error) {
+        console.error(`Error generating ${style} variation:`, error);
+        variations.push({
+          style,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    const successCount = variations.filter(v => v.success).length;
+    
+    return {
+      success: successCount > 0,
+      variations,
+      summary: {
+        total: variations.length,
+        successful: successCount,
+        failed: variations.length - successCount
+      }
+    };
+  }
+
+  /**
+   * Generate step-by-step images for an activity
+   */
+  async generateActivitySteps(activity, numSteps = 4, options = {}) {
+    const {
+      stylePreset = 'visual-schedule',
+      qualityLevel = 'child-friendly',
+      generateImages = true
+    } = options;
+
+    console.log(`🎨 Generating activity steps for: ${activity}`);
+
+    // Generate step descriptions (simplified version)
+    const stepDescriptions = this.generateStepDescriptions(activity, numSteps);
+    
+    if (!generateImages) {
+      return {
+        success: true,
+        steps: stepDescriptions.map((desc, index) => ({
+          id: index + 1,
+          label: `Step ${index + 1}`,
+          description: desc,
+          order: index + 1
+        }))
+      };
+    }
+
+    // Generate images for each step
+    const stepsWithImages = [];
+    
+    for (let i = 0; i < stepDescriptions.length; i++) {
+      const stepDescription = stepDescriptions[i];
+      
+      try {
+        const imageResult = await this.generateEnhancedImage({
+          action: stepDescription,
+          stylePreset,
+          qualityLevel
+        });
+
+        stepsWithImages.push({
+          id: i + 1,
+          label: `Step ${i + 1}`,
+          description: stepDescription,
+          order: i + 1,
+          image: imageResult.success ? imageResult.image : null,
+          imageMetadata: imageResult.success ? imageResult.metadata : null,
+          imageGenerated: imageResult.success
+        });
+      } catch (error) {
+        console.error(`Error generating image for step ${i + 1}:`, error);
+        stepsWithImages.push({
+          id: i + 1,
+          label: `Step ${i + 1}`,
+          description: stepDescription,
+          order: i + 1,
+          image: null,
+          imageGenerated: false
+        });
+      }
+    }
+
+    return {
+      success: true,
+      steps: stepsWithImages,
+      metadata: {
+        activity,
+        numSteps: stepsWithImages.length,
+        stylePreset,
+        qualityLevel,
+        imagesGenerated: generateImages,
+        generatedAt: new Date().toISOString()
+      }
+    };
+  }
+
+  /**
+   * Generate step descriptions for an activity (simplified)
+   */
+  generateStepDescriptions(activity, numSteps) {
+    const commonActivities = {
+      'brushing teeth': [
+        'Get toothbrush and toothpaste',
+        'Put toothpaste on toothbrush',
+        'Brush teeth in circular motions',
+        'Rinse mouth with water',
+        'Put toothbrush away'
+      ],
+      'washing hands': [
+        'Turn on the water faucet',
+        'Put soap on hands',
+        'Rub hands together with soap',
+        'Rinse hands with water',
+        'Dry hands with towel'
+      ],
+      'making a sandwich': [
+        'Get bread and ingredients',
+        'Put ingredients on one slice of bread',
+        'Put the other slice of bread on top',
+        'Cut the sandwich in half',
+        'Clean up the workspace'
+      ],
+      'getting dressed': [
+        'Choose clothes for the day',
+        'Put on underwear and socks',
+        'Put on shirt or top',
+        'Put on pants or skirt',
+        'Put on shoes'
+      ],
+      'how to pray': [
+        'Find a quiet, clean place to pray',
+        'Face the direction of prayer (if applicable)',
+        'Begin with opening prayers or intentions',
+        'Engage in the main prayer or meditation',
+        'Close with gratitude and final prayers'
+      ]
+    };
+
+    const activityKey = activity.toLowerCase();
+    const predefinedSteps = commonActivities[activityKey];
+    
+    if (predefinedSteps) {
+      return predefinedSteps.slice(0, numSteps);
+    }
+
+    // Generate generic steps if activity not found
+    const genericSteps = [];
+    for (let i = 1; i <= numSteps; i++) {
+      genericSteps.push(`Step ${i} of ${activity}`);
+    }
+    
+    return genericSteps;
   }
 
   /**

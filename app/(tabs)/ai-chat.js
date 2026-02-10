@@ -23,6 +23,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { conversationHistoryService } from '@/services/conversationHistoryService';
 import { imageGenerationService } from '@/services/imageGenerationService';
+import EnhancedImageTestModal from '@/components/EnhancedImageTestModal';
 
 export default function AIChatScreen() {
   const router = useRouter();
@@ -79,6 +80,7 @@ Some suggestions:
   const [allowInputFocus, setAllowInputFocus] = useState(false);
   const [exportingMessageId, setExportingMessageId] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
 
   // Keyboard event listeners
   useEffect(() => {
@@ -310,7 +312,13 @@ Some suggestions:
       'generate picture', 'create picture', 'make picture', 'draw picture',
       'show me image', 'show me picture', 'visual', 'illustration',
       'generate visual', 'create visual', 'make visual',
-      'image of', 'picture of', 'visual of'
+      'image of', 'picture of', 'visual of',
+      // Enhanced features
+      'style variations', 'different styles', 'multiple styles',
+      'social story image', 'visual schedule', 'sensory friendly image',
+      'enhanced image', 'autism friendly image', 'educational image',
+      // Steps
+      'by steps', 'step by step', 'steps for', 'how to', 'instructions for'
     ];
     
     const lowerInput = input.toLowerCase();
@@ -329,7 +337,7 @@ Some suggestions:
       if (!action) {
         const clarificationMessage = {
           id: Date.now() + 1,
-          text: "I'd be happy to generate an image for you! Could you please specify what action or activity you'd like me to illustrate? For example:\n\n• 'Generate an image of brushing teeth'\n• 'Create a picture of washing hands'\n• 'Show me a visual for morning routine'\n• 'Make an image of a child reading'",
+          text: "I'd be happy to generate an enhanced image for you! Could you please specify what action or activity you'd like me to illustrate? For example:\n\n• 'Generate an image of brushing teeth'\n• 'Create a picture of washing hands'\n• 'Show me a visual for morning routine'\n• 'Make an image of a child reading'\n• 'Create style variations for eating lunch'\n• 'Generate a social story image for going to school'",
           isAI: true,
           timestamp: new Date()
         };
@@ -337,84 +345,189 @@ Some suggestions:
         return;
       }
 
-      // Check service availability first
-      const isAvailable = await imageGenerationService.isAvailable();
-      console.log(`🔍 Service available: ${isAvailable}`);
+      // Detect if user wants enhanced features
+      const wantsVariations = userInput.toLowerCase().includes('variation') || userInput.toLowerCase().includes('different style');
+      const wantsSocialStory = userInput.toLowerCase().includes('social story') || userInput.toLowerCase().includes('social situation');
+      const wantsSteps = userInput.toLowerCase().includes('by steps') || userInput.toLowerCase().includes('step by step') || userInput.toLowerCase().includes('how to');
+      const stylePreset = detectStylePreset(userInput);
+      const qualityLevel = detectQualityLevel(userInput);
 
-      if (!isAvailable) {
-        const configMessage = {
-          id: Date.now() + 1,
-          text: "The image generation service is not properly configured. Please check your configuration and try again.",
-          isAI: true,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, configMessage]);
-        return;
-      }
-
-      // Show generating message
+      // Show generating message with enhanced features info
       const generatingMessage = {
         id: Date.now() + 1,
-        text: `🎨 Generating an autism-friendly image of "${action}"...\n\nThis may take a moment. I'm creating a clear, educational illustration with soft colors and minimal distractions.`,
+        text: `🎨 Generating enhanced autism-friendly ${wantsSteps ? 'step-by-step images' : 'image'} for "${action}"...\n\n${wantsVariations ? '🔄 Creating multiple style variations...' : ''}${wantsSocialStory ? '📚 Using social story style...' : ''}${wantsSteps ? '📋 Creating step-by-step visual guide...' : ''}${stylePreset !== 'autism-friendly' ? `🎯 Style: ${stylePreset}` : ''}${qualityLevel !== 'child-friendly' ? `✨ Quality: ${qualityLevel}` : ''}\n\nThis may take a moment. I'm creating clear, educational illustrations with soft colors and minimal distractions.`,
         isAI: true,
         timestamp: new Date(),
         isGenerating: true
       };
       setMessages(prev => [...prev, generatingMessage]);
 
-      console.log(`🎨 Starting image generation for: "${action}"`);
+      console.log(`🎨 Starting enhanced image generation for: "${action}"`);
 
-      // Generate the image
-      const result = await imageGenerationService.generateEducationalImage({
-        action: action,
-        size: '768x768',
-        styleNote: 'autism-friendly educational style'
-      });
+      let result;
 
-      console.log(`🎨 Image generation result:`, result);
+      if (wantsSteps) {
+        // Generate step-by-step images
+        result = await generateActivitySteps(action, 5, stylePreset);
+      } else if (wantsVariations) {
+        // Use the enhanced generate-image endpoint for variations
+        result = await generateEnhancedImageVariations(action, stylePreset);
+      } else {
+        // Use the enhanced generate-image endpoint for single image
+        result = await generateEnhancedSingleImage(action, stylePreset, qualityLevel);
+      }
+
+      console.log(`🎨 Enhanced image generation result:`, result);
 
       // Remove the generating message
       setMessages(prev => prev.filter(msg => !msg.isGenerating));
 
-      if (result.success && result.image) {
-        const imageMessage = {
-          id: Date.now() + 2,
-          text: `Here's your autism-friendly image of "${action}":`,
-          isAI: true,
-          timestamp: new Date(),
-          image: result.image,
-          imageMetadata: result.metadata
-        };
-        setMessages(prev => [...prev, imageMessage]);
+      if (result.success) {
+        if (result.steps) {
+          // Handle step-by-step results
+          const stepsMessage = {
+            id: Date.now() + 2,
+            text: `Here are your enhanced step-by-step images for "${action}":\n\n📋 Generated ${result.steps.length} steps with autism-friendly design principles.`,
+            isAI: true,
+            timestamp: new Date(),
+            steps: result.steps,
+            imageMetadata: { type: 'steps', action: action }
+          };
+          setMessages(prev => [...prev, stepsMessage]);
+        } else if (result.variations) {
+          // Handle multiple variations
+          const variationsMessage = {
+            id: Date.now() + 2,
+            text: `Here are your enhanced style variations for "${action}":\n\n✨ Generated ${result.variations.length} different styles with autism-friendly design principles.`,
+            isAI: true,
+            timestamp: new Date(),
+            variations: result.variations,
+            imageMetadata: { type: 'variations', action: action }
+          };
+          setMessages(prev => [...prev, variationsMessage]);
+        } else if (result.image) {
+          // Handle single enhanced image
+          const imageMessage = {
+            id: Date.now() + 2,
+            text: `Here's your enhanced autism-friendly image of "${action}":\n\n🎯 Style: ${result.metadata?.stylePreset || stylePreset}\n✨ Quality: ${result.metadata?.qualityLevel || qualityLevel}\n🎨 Enhanced with specialized autism-friendly design principles`,
+            isAI: true,
+            timestamp: new Date(),
+            image: result.image,
+            imageMetadata: result.metadata
+          };
+          setMessages(prev => [...prev, imageMessage]);
+        }
 
-        // Save conversation with image
+        // Save conversation with enhanced image data
         await saveConversationHistory(
           userInput, 
-          `Generated image: ${action}`,
-          { imageGenerated: true, action: action }
+          `Generated enhanced ${result.steps ? 'step-by-step images' : result.variations ? 'style variations' : 'image'}: ${action}`,
+          { 
+            imageGenerated: true, 
+            action: action,
+            enhanced: true,
+            stylePreset: stylePreset,
+            qualityLevel: qualityLevel,
+            hasVariations: !!result.variations,
+            hasSteps: !!result.steps
+          }
         );
       } else {
-        console.error(`🎨 Image generation failed:`, result);
+        console.error(`🎨 Enhanced image generation failed:`, result);
         const errorMessage = {
           id: Date.now() + 2,
-          text: `I apologize, but I couldn't generate the image right now. Error: ${result.error || 'Unknown error'}\n\nDetails: ${result.details || 'No additional details'}\n\nPlease try again or check if the image generation service is configured properly.`,
+          text: `I apologize, but I couldn't generate the enhanced image right now. Error: ${result.error || 'Unknown error'}\n\nDetails: ${result.details || 'No additional details'}\n\nPlease try again or check if the enhanced image generation service is configured properly.`,
           isAI: true,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorMessage]);
       }
     } catch (error) {
-      console.error('🎨 Image generation error:', error);
+      console.error('🎨 Enhanced image generation error:', error);
       console.error('🎨 Error stack:', error.stack);
       const errorMessage = {
         id: Date.now() + 2,
-        text: `I encountered an error while generating the image: ${error.message}\n\nPlease make sure the image generation service is properly configured and try again.`,
+        text: `I encountered an error while generating the enhanced image: ${error.message}\n\nPlease make sure the enhanced image generation service is properly configured and try again.`,
         isAI: true,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsGeneratingImage(false);
+    }
+  };
+
+  // Generate enhanced single image
+  const generateEnhancedSingleImage = async (action, stylePreset, qualityLevel) => {
+    try {
+      const result = await imageGenerationService.generateEnhancedImage({
+        action: action,
+        stylePreset: stylePreset,
+        qualityLevel: qualityLevel,
+        size: '768x768'
+      });
+      return result;
+    } catch (error) {
+      console.error('Enhanced single image generation error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Generate enhanced image variations
+  const generateEnhancedImageVariations = async (action, baseStyle) => {
+    try {
+      const result = await imageGenerationService.generateStyleVariations(action);
+      return result;
+    } catch (error) {
+      console.error('Enhanced variations generation error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Generate activity steps with images
+  const generateActivitySteps = async (activity, numSteps, stylePreset) => {
+    try {
+      const result = await imageGenerationService.generateActivitySteps(activity, numSteps, {
+        stylePreset: stylePreset,
+        qualityLevel: 'child-friendly',
+        generateImages: true
+      });
+      return result;
+    } catch (error) {
+      console.error('Activity steps generation error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Detect style preset from user input
+  const detectStylePreset = (input) => {
+    const lowerInput = input.toLowerCase();
+    
+    if (lowerInput.includes('visual schedule') || lowerInput.includes('schedule')) {
+      return 'visual-schedule';
+    } else if (lowerInput.includes('sensory') || lowerInput.includes('calm') || lowerInput.includes('soothing')) {
+      return 'sensory-friendly';
+    } else if (lowerInput.includes('social story') || lowerInput.includes('social situation')) {
+      return 'social-story';
+    } else {
+      return 'autism-friendly'; // default
+    }
+  };
+
+  // Detect quality level from user input
+  const detectQualityLevel = (input) => {
+    const lowerInput = input.toLowerCase();
+    
+    if (lowerInput.includes('detailed') || lowerInput.includes('high detail')) {
+      return 'high-detail';
+    } else if (lowerInput.includes('realistic') || lowerInput.includes('real')) {
+      return 'realistic';
+    } else if (lowerInput.includes('minimal') || lowerInput.includes('simple')) {
+      return 'minimalist';
+    } else if (lowerInput.includes('inclusive') || lowerInput.includes('diverse')) {
+      return 'inclusive';
+    } else {
+      return 'child-friendly'; // default
     }
   };
 
@@ -638,9 +751,14 @@ Some suggestions:
           </ThemedText>
         </View>
         
-        <TouchableOpacity onPress={clearChat} style={styles.clearButton}>
-          <Ionicons name="trash-outline" size={20} color="#666" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={() => setShowTestModal(true)} style={styles.testButton}>
+            <Ionicons name="flask-outline" size={18} color="#007bff" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={clearChat} style={styles.clearButton}>
+            <Ionicons name="trash-outline" size={20} color="#666" />
+          </TouchableOpacity>
+        </View>
       </ThemedView>
 
       {/* Messages Container with proper keyboard handling */}
@@ -698,13 +816,68 @@ Some suggestions:
                   {message.imageMetadata && (
                     <View style={styles.imageMetadata}>
                       <Text style={styles.imageMetadataText}>
-                        Action: {message.imageMetadata.action}
+                        Style: {message.imageMetadata.stylePreset || 'autism-friendly'}
                       </Text>
                       <Text style={styles.imageMetadataText}>
-                        Size: {message.imageMetadata.size}
+                        Quality: {message.imageMetadata.qualityLevel || 'child-friendly'}
                       </Text>
+                      {message.imageMetadata.generatedAt && (
+                        <Text style={styles.imageMetadataText}>
+                          Generated: {new Date(message.imageMetadata.generatedAt).toLocaleTimeString()}
+                        </Text>
+                      )}
                     </View>
                   )}
+                </View>
+              )}
+              
+              {/* Display image variations if present */}
+              {message.variations && (
+                <View style={styles.variationsContainer}>
+                  <Text style={styles.variationsTitle}>Style Variations:</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.variationsScroll}>
+                    {message.variations.map((variation, index) => (
+                      <View key={index} style={styles.variationItem}>
+                        {variation.success && variation.image ? (
+                          <>
+                            <Image
+                              source={{ uri: variation.image }}
+                              style={styles.variationImage}
+                              resizeMode="contain"
+                            />
+                            <Text style={styles.variationLabel}>{variation.style}</Text>
+                          </>
+                        ) : (
+                          <View style={styles.variationError}>
+                            <Text style={styles.variationErrorText}>Failed to generate {variation.style}</Text>
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Display activity steps if present */}
+              {message.steps && (
+                <View style={styles.stepsContainer}>
+                  <Text style={styles.stepsTitle}>Step-by-Step Guide:</Text>
+                  {message.steps.map((step, index) => (
+                    <View key={step.id} style={styles.stepItem}>
+                      <View style={styles.stepHeader}>
+                        <Text style={styles.stepNumber}>{step.order}</Text>
+                        <Text style={styles.stepLabel}>{step.label}</Text>
+                      </View>
+                      <Text style={styles.stepDescription}>{step.description}</Text>
+                      {step.image && (
+                        <Image
+                          source={{ uri: step.image }}
+                          style={styles.stepImage}
+                          resizeMode="contain"
+                        />
+                      )}
+                    </View>
+                  ))}
                 </View>
               )}
               
@@ -764,7 +937,7 @@ Some suggestions:
             value={inputText}
             onChangeText={setInputText}
             placeholder={allowInputFocus ? 
-              "Ask me about autism education, lesson plans, strategies, or say 'generate image of...' for visuals" : 
+              "Ask me about autism education, lesson plans, strategies, or try: 'generate enhanced image of...', 'create style variations for...', 'make a visual schedule image...'" : 
               "Loading..."
             }
             placeholderTextColor="#999"
@@ -806,6 +979,12 @@ Some suggestions:
           </TouchableOpacity>
         </ThemedView>
       </KeyboardAvoidingView>
+
+      {/* Enhanced Image Test Modal */}
+      <EnhancedImageTestModal 
+        visible={showTestModal} 
+        onClose={() => setShowTestModal(false)} 
+      />
     </SafeAreaView>
   );
 }
@@ -849,6 +1028,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#2C3E50',
     marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  testButton: {
+    padding: 8,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#007bff',
   },
   clearButton: {
     padding: 8,
@@ -1028,5 +1219,101 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6c757d',
     marginBottom: 2,
+  },
+  variationsContainer: {
+    marginTop: 12,
+  },
+  variationsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#34495E',
+    marginBottom: 8,
+  },
+  variationsScroll: {
+    flexDirection: 'row',
+  },
+  variationItem: {
+    marginRight: 12,
+    alignItems: 'center',
+    width: 120,
+  },
+  variationImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  variationLabel: {
+    fontSize: 11,
+    color: '#6c757d',
+    marginTop: 4,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  variationError: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: '#f8d7da',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+  },
+  variationErrorText: {
+    fontSize: 10,
+    color: '#721c24',
+    textAlign: 'center',
+  },
+  stepsContainer: {
+    marginTop: 12,
+  },
+  stepsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#34495E',
+    marginBottom: 12,
+  },
+  stepItem: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#007bff',
+  },
+  stepHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  stepNumber: {
+    backgroundColor: '#007bff',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+    minWidth: 24,
+    textAlign: 'center',
+  },
+  stepLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2c3e50',
+    flex: 1,
+  },
+  stepDescription: {
+    fontSize: 13,
+    color: '#6c757d',
+    marginBottom: 8,
+    lineHeight: 18,
+  },
+  stepImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 6,
+    backgroundColor: '#e9ecef',
   },
 });

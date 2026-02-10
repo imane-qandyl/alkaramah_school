@@ -16,7 +16,10 @@
     "setup-images": "node scripts/setupImageGeneration.js",
     "image-status": "node scripts/setupImageGeneration.js status",
     "clear-image-config": "node scripts/setupImageGeneration.js clear",
-    "test-images": "node scripts/testImageGeneration.js"
+    "test-images": "node scripts/testImageGeneration.js",
+    "test-enhanced-images": "node scripts/testEnhancedImageGeneration.js",
+    "enhanced-image-demo": "node scripts/demoEnhancedImageGeneration.js",
+    "test-enhanced-setup": "node scripts/testEnhancedImageSetup.js"
   },
   "dependencies": {
     "@azure/openai": "^2.0.0",
