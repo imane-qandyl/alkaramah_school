@@ -127,8 +127,10 @@ export default function CreateProfileScreen() {
       };
 
       const result = await studentProfileService.createProfile(profileData, 'manual');
+      console.log('Profile creation result:', result);
 
       if (result.success) {
+        console.log('Profile created successfully:', result.profile);
         Alert.alert(
           'Success!',
           `Profile created for ${formData.studentName}. Set as active profile?`,
@@ -138,12 +140,14 @@ export default function CreateProfileScreen() {
               text: 'Set Active',
               onPress: async () => {
                 await studentProfileService.setActiveProfile(result.profile.id);
+                console.log('Set as active profile:', result.profile.id);
                 router.back();
               }
             }
           ]
         );
       } else {
+        console.error('Profile creation failed:', result.error);
         Alert.alert('Error', 'Failed to create profile. Please try again.');
       }
     } catch (error) {

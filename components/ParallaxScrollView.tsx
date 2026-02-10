@@ -14,14 +14,17 @@ const HEADER_HEIGHT = 250;
 type Props = PropsWithChildren<{
   headerImage: ReactElement;
   headerBackgroundColor: { dark: string; light: string };
+  forceColorScheme?: 'light' | 'dark';
 }>;
 
 export default function ParallaxScrollView({
   children,
   headerImage,
   headerBackgroundColor,
+  forceColorScheme,
 }: Props) {
-  const colorScheme = useColorScheme() ?? 'light';
+  const systemColorScheme = useColorScheme() ?? 'light';
+  const colorScheme = forceColorScheme || systemColorScheme;
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
 
@@ -43,8 +46,18 @@ export default function ParallaxScrollView({
   });
 
   return (
-    <ThemedView style={styles.container}>
-      <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16}>
+    <ThemedView 
+      style={styles.container} 
+      lightColor="#FAFBFC" 
+      darkColor={forceColorScheme === 'light' ? "#FAFBFC" : "#1A1D23"}
+    >
+      <Animated.ScrollView 
+        ref={scrollRef} 
+        scrollEventThrottle={16} 
+        style={{ 
+          backgroundColor: forceColorScheme === 'light' ? '#FAFBFC' : (colorScheme === 'light' ? '#FAFBFC' : '#1A1D23')
+        }}
+      >
         <Animated.View
           style={[
             styles.header,
@@ -53,7 +66,13 @@ export default function ParallaxScrollView({
           ]}>
           {headerImage}
         </Animated.View>
-        <ThemedView style={styles.content}>{children}</ThemedView>
+        <ThemedView 
+          style={styles.content} 
+          lightColor="#FAFBFC" 
+          darkColor={forceColorScheme === 'light' ? "#FAFBFC" : "#1A1D23"}
+        >
+          {children}
+        </ThemedView>
       </Animated.ScrollView>
     </ThemedView>
   );

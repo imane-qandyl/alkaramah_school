@@ -1,13 +1,16 @@
 import { StyleSheet, View, TouchableOpacity, ScrollView, TextInput, Alert, Share } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useCallback } from 'react';
 import { storageService } from '@/services/storageService';
 import { enhancedStorageService } from '@/services/databaseService';
+import { enhancedResourceService } from '@/services/enhancedResourceService';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import ResourceEditor from '@/components/ResourceEditor';
+import CreateResourceModal from '@/components/CreateResourceModal';
 
 interface Resource {
   id: string;
@@ -16,9 +19,16 @@ interface Resource {
   format?: string;
   aetTarget?: string;
   studentAge?: string;
+  studentName?: string;
+  studentId?: string;
   createdAt?: string;
   timestamp?: string;
   lastModified?: string;
+  source?: string;
+  topic?: string;
+  hasModelInsights?: boolean;
+  provider?: string;
+  metadata?: any;
 }
 
 export default function ResourceLibraryScreen() {
@@ -29,9 +39,10 @@ export default function ResourceLibraryScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
 
-  const filterOptions = ['All', 'Worksheets', 'Activity Cards', 'Slides', 'Checklists'];
+  const filterOptions = ['All', 'AI Generated', 'Manual Created', 'Templates', 'Worksheets', 'Activity Cards', 'Slides', 'Checklists'];
   const sortOptions = [
     { key: 'newest', label: 'Newest First' },
     { key: 'oldest', label: 'Oldest First' },
@@ -44,18 +55,21 @@ export default function ResourceLibraryScreen() {
     try {
       setLoading(true);
       
-      // Use enhanced storage service with fallback
-      let allResources;
-      try {
-        allResources = await enhancedStorageService.getAllResources();
-      } catch (error) {
-        console.log('Enhanced storage not available, using basic storage:', (error as Error).message);
-        allResources = await storageService.getAllResources();
-      }
+      // Use enhanced resource service that combines all sources
+      const allResources = await enhancedResourceService.getAllResources();
+      console.log(`📚 Loaded ${allResources.length} resources from all sources`);
       
       setResources(allResources);
     } catch (error) {
       console.error('Error loading resources:', error);
+      // Fallback to basic storage
+      try {
+        const basicResources = await storageService.getAllResources();
+        setResources(basicResources);
+      } catch (fallbackError) {
+        console.error('Fallback loading also failed:', fallbackError);
+        setResources([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -73,13 +87,29 @@ export default function ResourceLibraryScreen() {
     .filter(resource => {
       const matchesSearch = resource.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            resource.aetTarget?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           resource.content?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = selectedFilter === 'All' || 
-                           resource.format?.toLowerCase().includes(selectedFilter.toLowerCase()) ||
-                           (selectedFilter === 'Activity Cards' && resource.format === 'cards') ||
-                           (selectedFilter === 'Worksheets' && resource.format === 'worksheet') ||
-                           (selectedFilter === 'Slides' && resource.format === 'slides') ||
-                           (selectedFilter === 'Checklists' && resource.format === 'checklist');
+                           resource.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           resource.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           resource.topic?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      let matchesFilter = false;
+      if (selectedFilter === 'All') {
+        matchesFilter = true;
+      } else if (selectedFilter === 'AI Generated') {
+        matchesFilter = resource.source === 'ai_generated' || resource.format === 'ai_response';
+      } else if (selectedFilter === 'Manual Created') {
+        matchesFilter = resource.source === 'manual_created' || 
+                       (resource.metadata?.createdManually === true) ||
+                       (!resource.source && !resource.format?.includes('ai') && !resource.metadata?.isTemplate);
+      } else if (selectedFilter === 'Templates') {
+        matchesFilter = resource.source === 'template' || resource.format === 'template';
+      } else {
+        matchesFilter = resource.format?.toLowerCase().includes(selectedFilter.toLowerCase()) ||
+                       (selectedFilter === 'Activity Cards' && resource.format === 'cards') ||
+                       (selectedFilter === 'Worksheets' && resource.format === 'worksheet') ||
+                       (selectedFilter === 'Slides' && resource.format === 'slides') ||
+                       (selectedFilter === 'Checklists' && resource.format === 'checklist');
+      }
+      
       return matchesSearch && matchesFilter;
     })
     .sort((a, b) => {
@@ -173,6 +203,29 @@ export default function ResourceLibraryScreen() {
     Alert.alert('Export', `Resource exported as ${format}`);
   };
 
+  const handleCreateResource = async (resourceData: any) => {
+    try {
+      console.log('Creating resource:', resourceData);
+      
+      // Use enhanced resource service for better handling
+      const result = await enhancedResourceService.createManualResource(resourceData);
+      
+      if (result.success) {
+        await loadResources();
+        Alert.alert(
+          'Success! 🎉', 
+          `Resource "${resourceData.title}" has been created and added to your library.`,
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else {
+        Alert.alert('Error', result.error || 'Failed to create resource');
+      }
+    } catch (error) {
+      console.error('Error creating resource:', error);
+      Alert.alert('Error', 'Failed to create resource. Please try again.');
+    }
+  };
+
   const handleDeleteResource = async (resourceId: string) => {
     Alert.alert(
       'Delete Resource',
@@ -235,10 +288,11 @@ export default function ResourceLibraryScreen() {
   const stats = getResourceStats();
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollContainer}>
       {/* Header */}
       <ThemedView style={styles.header}>
-        <ThemedText style={styles.headerTitle}>Resource Library</ThemedText>
+        <ThemedText type="title" style={styles.headerTitle}>Resource Library</ThemedText>
       </ThemedView>
 
       {/* Statistics Cards */}
@@ -283,20 +337,31 @@ export default function ResourceLibraryScreen() {
           )}
         </View>
         
-        {/* Sort Dropdown */}
-        <TouchableOpacity style={styles.sortButton} onPress={() => {
-          Alert.alert(
-            'Sort Resources',
-            'Choose sorting option',
-            sortOptions.map(option => ({
-              text: option.label,
-              onPress: () => setSortBy(option.key)
-            }))
-          );
-        }}>
-          <Ionicons name="funnel-outline" size={18} color="#2C3E50" />
-          <ThemedText style={styles.sortText}>Sort</ThemedText>
-        </TouchableOpacity>
+        <View style={styles.controlsRow}>
+          {/* Sort Dropdown */}
+          <TouchableOpacity style={styles.sortButton} onPress={() => {
+            Alert.alert(
+              'Sort Resources',
+              'Choose sorting option',
+              sortOptions.map(option => ({
+                text: option.label,
+                onPress: () => setSortBy(option.key)
+              }))
+            );
+          }}>
+            <Ionicons name="funnel-outline" size={18} color="#2C3E50" />
+            <ThemedText style={styles.sortText}>Sort</ThemedText>
+          </TouchableOpacity>
+
+          {/* Create Resource Button */}
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={() => setShowCreateModal(true)}
+          >
+            <Ionicons name="add-outline" size={20} color="#fff" />
+            <ThemedText style={styles.primaryButtonText}>Create Resource</ThemedText>
+          </TouchableOpacity>
+        </View>
       </ThemedView>
 
       {/* Filter Tabs */}
@@ -341,10 +406,7 @@ export default function ResourceLibraryScreen() {
           </ThemedText>
           {(!searchQuery && selectedFilter === 'All') && (
             <>
-              <TouchableOpacity style={styles.createButton} onPress={() => {
-                // Navigate to AI Chat tab
-                Alert.alert('Create Resource', 'Go to AI Chat tab to create your first resource!');
-              }}>
+              <TouchableOpacity style={styles.createButton} onPress={() => setShowCreateModal(true)}>
                 <Ionicons name="add-circle-outline" size={20} color="white" />
                 <ThemedText style={styles.createButtonText}>Create Resource</ThemedText>
               </TouchableOpacity>
@@ -460,7 +522,25 @@ export default function ResourceLibraryScreen() {
           </TouchableOpacity>
         </ThemedView>
       )}
+
+      {/* Create Resource Modal */}
+      <CreateResourceModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSave={handleCreateResource}
+      />
+
+      {/* Floating Action Button */}
+      {filteredAndSortedResources.length > 0 && (
+        <TouchableOpacity 
+          style={styles.floatingActionButton}
+          onPress={() => setShowCreateModal(true)}
+        >
+          <Ionicons name="add" size={24} color="white" />
+        </TouchableOpacity>
+      )}
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -469,9 +549,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFBFC',
   },
+  scrollContainer: {
+    flex: 1,
+  },
   header: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 20,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E1E8ED',
@@ -483,6 +566,25 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontFamily: 'SF Pro Display',
     letterSpacing: -0.4,
+  },
+  createResourceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2C3E50',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    shadowColor: '#2C3E50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  createResourceButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   headerSubtitle: {
     fontSize: 16,
@@ -548,6 +650,26 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  primaryButton: {
+    backgroundColor: '#2C3E50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   sortButton: {
     flexDirection: 'row',
@@ -748,5 +870,21 @@ const styles = StyleSheet.create({
     color: '#8B9DC3',
     fontWeight: '500',
     fontFamily: 'SF Pro Text',
+  },
+  floatingActionButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2C3E50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#2C3E50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

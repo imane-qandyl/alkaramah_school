@@ -7,35 +7,33 @@ import {
   ScrollView,
   RefreshControl,
   Alert,
-  Platform
+  Platform,
+  TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { studentProfileService } from '@/services/studentProfileService';
-import { datasetIntegrationService } from '@/services/datasetIntegrationService';
 import { realDatasetService } from '@/services/realDatasetService';
 
 export default function StudentsScreen() {
   const router = useRouter();
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [filteredProfiles, setFilteredProfiles] = useState<any[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<any>({ total: 0, byAgeGroup: {}, bySupportLevel: {} });
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load profiles and stats
   const loadData = useCallback(async () => {
     try {
-      // Force reload real autism diagnosis dataset (ensures fresh data from your CSV)
-      console.log('🔄 Loading real autism diagnosis dataset...');
-      const result = await realDatasetService.forceReloadRealDataset();
+      console.log('🔄 Loading student profiles...');
       
-      if (result.success) {
-        console.log(`✅ Loaded real profiles: ${result.profileNames?.join(', ')}`);
-      }
-      
+      // Get all profiles first (including manual ones)
       const [allProfiles, profileStats, activeProfile] = await Promise.all([
         studentProfileService.getAllProfiles(),
         studentProfileService.getProfileStats(),
@@ -45,7 +43,26 @@ export default function StudentsScreen() {
       console.log(`📊 Found ${allProfiles.length} profiles in storage`);
       console.log(`👤 Profile names: ${allProfiles.map((p: any) => p.studentName).join(', ')}`);
       
-      setProfiles(allProfiles);
+      // Try to load real dataset profiles (but don't overwrite manual ones)
+      try {
+        const result = await realDatasetService.forceReloadRealDataset();
+        if (result.success) {
+          console.log(`✅ Also loaded real dataset profiles: ${result.profileNames?.join(', ')}`);
+          // Reload profiles after dataset load
+          const updatedProfiles = await studentProfileService.getAllProfiles();
+          setProfiles(updatedProfiles);
+          setFilteredProfiles(updatedProfiles);
+        } else {
+          // Use the profiles we already have
+          setProfiles(allProfiles);
+          setFilteredProfiles(allProfiles);
+        }
+      } catch (datasetError: any) {
+        console.log('Dataset loading failed, using existing profiles:', datasetError.message);
+        setProfiles(allProfiles);
+        setFilteredProfiles(allProfiles);
+      }
+      
       setStats(profileStats);
       setActiveProfileId(activeProfile?.id || null);
     } catch (error) {
@@ -56,6 +73,30 @@ export default function StudentsScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Reload data when screen comes into focus (e.g., returning from create profile)
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
+  // Filter profiles based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredProfiles(profiles);
+    } else {
+      const filtered = profiles.filter(profile => 
+        profile.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        profile.age?.toString().includes(searchQuery) ||
+        profile.supportLevels?.overall?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        profile.communicationProfile?.verbalSkills?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        profile.learningProfile?.attentionSpan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        profile.socialProfile?.groupPreference?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredProfiles(filtered);
+    }
+  }, [searchQuery, profiles]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -219,81 +260,109 @@ export default function StudentsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.headerTitle}>Student Profiles</ThemedText>
-      </ThemedView>
-
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total Profiles</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.bySupportLevel?.high || 0}</Text>
-          <Text style={styles.statLabel}>High Support</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.byAgeGroup?.primary || 0}</Text>
-          <Text style={styles.statLabel}>Primary Age</Text>
-        </View>
-      </View>
-
-      {/* Action Buttons */}
-      <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => router.push('/create-profile')}
-        >
-          <Ionicons name="person-add-outline" size={20} color="#fff" />
-          <Text style={styles.primaryButtonText}>Add Student</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Profiles List */}
+      {/* Profiles List - Now contains everything */}
       <ScrollView
         style={styles.profilesList}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
-        {profiles.length === 0 ? (
+        {/* Header */}
+        <ThemedView style={styles.header}>
+          <ThemedText type="title" style={styles.headerTitle}>Student Profiles</ThemedText>
+        </ThemedView>
+
+        {/* Stats Cards */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statsContentContainer}>
+            <ThemedView style={[styles.statCard, { backgroundColor: '#2C3E50' }]}>
+              <Ionicons name="people-outline" size={24} color="white" />
+              <ThemedText style={styles.statNumber}>{stats.total}</ThemedText>
+              <ThemedText style={styles.statLabel}>Total Profiles</ThemedText>
+            </ThemedView>
+            <ThemedView style={[styles.statCard, { backgroundColor: '#E67E22' }]}>
+              <Ionicons name="alert-circle-outline" size={24} color="white" />
+              <ThemedText style={styles.statNumber}>{stats.bySupportLevel?.high || 0}</ThemedText>
+              <ThemedText style={styles.statLabel}>High Support</ThemedText>
+            </ThemedView>
+            <ThemedView style={[styles.statCard, { backgroundColor: '#5DADE2' }]}>
+              <Ionicons name="school-outline" size={24} color="white" />
+              <ThemedText style={styles.statNumber}>{stats.byAgeGroup?.primary || 0}</ThemedText>
+              <ThemedText style={styles.statLabel}>Primary Age</ThemedText>
+            </ThemedView>
+            <ThemedView style={[styles.statCard, { backgroundColor: '#7FB8A3' }]}>
+              <Ionicons name="checkmark-circle-outline" size={24} color="white" />
+              <ThemedText style={styles.statNumber}>{stats.bySupportLevel?.low || 0}</ThemedText>
+              <ThemedText style={styles.statLabel}>Low Support</ThemedText>
+            </ThemedView>
+          </View>
+        </View>
+
+        {/* Search and Controls */}
+        <ThemedView style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search students by name, age, support level..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#999"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={20} color="#666" />
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          <View style={styles.controlsRow}>
+            {/* Reload Real Data Button */}
+            <TouchableOpacity 
+              style={styles.reloadButton}
+              onPress={async () => {
+                try {
+                  console.log('🔄 Manual reload requested...');
+                  const result = await realDatasetService.forceReloadRealDataset();
+                  if (result.success) {
+                    Alert.alert('Success', `Reloaded ${result.profilesLoaded} real profiles: ${result.profileNames?.slice(0, 3).join(', ')}...`);
+                    await loadData();
+                  }
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to reload real dataset');
+                }
+              }}
+            >
+              <Ionicons name="refresh-outline" size={18} color="#2C3E50" />
+              <ThemedText style={styles.reloadText}>Reload Data</ThemedText>
+            </TouchableOpacity>
+
+            {/* Add Student Button */}
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push('/create-profile')}
+            >
+              <Ionicons name="person-add-outline" size={20} color="#fff" />
+              <ThemedText style={styles.primaryButtonText}>Add Student</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ThemedView>
+        {filteredProfiles.length === 0 ? (
           <ThemedView style={styles.emptyState}>
             <Ionicons name="people-outline" size={64} color="#9E9E9E" />
-            <ThemedText style={styles.emptyStateTitle}>Loading Real Dataset...</ThemedText>
+            <ThemedText style={styles.emptyStateTitle}>
+              {searchQuery ? 'No matching students found' : 'Loading Real Dataset...'}
+            </ThemedText>
             <ThemedText style={styles.emptyStateText}>
-              Loading autism support profiles from your actual CSV dataset.
+              {searchQuery 
+                ? 'Try adjusting your search terms or clear the search to see all students.'
+                : 'Loading autism support profiles from your actual CSV dataset.'
+              }
             </ThemedText>
           </ThemedView>
         ) : (
           <>
-            {/* Real Dataset Notice */}
-            <ThemedView style={styles.realDataNotice}>
-              <View style={styles.noticeHeader}>
-                <Ionicons name="analytics" size={20} color="#2C3E50" />
-                <Text style={styles.noticeTitle}>Real Autism Diagnosis Dataset Loaded</Text>
-              </View>
-              <View style={styles.noticeActions}>
-                <TouchableOpacity 
-                  style={styles.noticeButton}
-                  onPress={async () => {
-                    try {
-                      console.log('🔄 Manual reload requested...');
-                      const result = await realDatasetService.forceReloadRealDataset();
-                      if (result.success) {
-                        Alert.alert('Success', `Reloaded ${result.profilesLoaded} real profiles: ${result.profileNames?.slice(0, 3).join(', ')}...`);
-                        await loadData();
-                      }
-                    } catch (error) {
-                      Alert.alert('Error', 'Failed to reload real dataset');
-                    }
-                  }}>
-                  <Text style={styles.noticeButtonText}>Reload Real Data</Text>
-                </TouchableOpacity>
-              </View>
-            </ThemedView>
-            
-            {profiles.map(renderProfileCard)}
+            {filteredProfiles.map(renderProfileCard)}
           </>
         )}
       </ScrollView>
@@ -304,65 +373,72 @@ export default function StudentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFBFC',
+    backgroundColor: '#fff',
+  },
+  profilesList: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   header: {
     padding: 20,
-    paddingTop: 10,
+    paddingTop: 60,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E1E8ED',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
     color: '#34495E',
+    marginBottom: 4,
     fontFamily: 'SF Pro Display',
     letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#8B9DC3',
-    marginTop: 4,
     fontFamily: 'SF Pro Text',
   },
   statsContainer: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingLeft: 0,
+    marginBottom: 0,
+    backgroundColor: '#fff',
+  },
+  statsContentContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingVertical: 0,
   },
   statCard: {
-    flex: 1,
-    backgroundColor: '#fff',
+    width: 120,
+    height: 100,
+    borderRadius: 20,
     padding: 16,
-    borderRadius: 16,
-    marginHorizontal: 4,
+    marginRight: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F4F6F8',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#2C3E50',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    justifyContent: 'center',
+    shadowColor: '#2C3E50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2C3E50',
+    color: 'white',
+    marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    color: 'white',
     textAlign: 'center',
-  },
-  actionButtonsContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    marginTop: 4,
   },
   primaryButton: {
     backgroundColor: '#2C3E50',
@@ -378,15 +454,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  profilesList: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
   profileCard: {
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+    marginHorizontal: 20,
     borderWidth: 1,
     borderColor: '#F4F6F8',
     ...Platform.select({
@@ -544,6 +617,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 40,
     marginTop: 40,
+    marginHorizontal: 20,
   },
   emptyStateTitle: {
     fontSize: 20,
@@ -570,45 +644,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // Real Data Notice Styles
-  realDataNotice: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
+
+  // Search Styles
+  searchContainer: {
     padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#2C3E50',
+    paddingHorizontal: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E1E8ED',
   },
-  noticeHeader: {
+  searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    backgroundColor: '#F4F6F8',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
   },
-  noticeTitle: {
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2E7D32',
-    marginLeft: 8,
+    color: '#34495E',
+    fontFamily: 'SF Pro Text',
   },
-  noticeText: {
+  clearButton: {
+    padding: 4,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#F4F6F8',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
+  },
+  reloadText: {
+    marginLeft: 6,
     fontSize: 14,
     color: '#2C3E50',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  noticeActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  noticeButton: {
-    backgroundColor: '#2C3E50',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  noticeButtonText: {
-    color: '#fff',
-    fontSize: 14,
     fontWeight: '500',
   },
 });

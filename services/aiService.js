@@ -72,6 +72,8 @@ class AIResourceGenerator {
       // First, try the trained chatbot model
       console.log('🤖 Attempting to use trained chatbot model...');
       const trainedResult = await trainedChatbotService.generateResource(params);
+      console.log('🔍 Trained chatbot result:', trainedResult.success ? 'SUCCESS' : 'FAILED');
+      
       if (trainedResult.success) {
         console.log('✅ Generated resource using trained chatbot model');
         return trainedResult;
@@ -177,7 +179,7 @@ class AIResourceGenerator {
    * Build user prompt based on parameters and autism support profile
    */
   buildUserPrompt(params) {
-    const { studentAge, abilityLevel, aetTarget, learningContext, format, visualSupport, textLevel, autismProfile } = params;
+    const { studentAge, abilityLevel, aetTarget, learningContext, format, visualSupport, textLevel, autismProfile, studentContext } = params;
     
     let basePrompt = `Create an autism-friendly educational resource with the following specifications:
 
@@ -193,6 +195,35 @@ ${aetTarget}
 - Format: ${format}
 - Text Level: ${textLevel}
 - Visual Support: ${visualSupport ? 'Include visual supports and symbols' : 'Text-based primarily'}`;
+
+    // Enhance prompt with student context if available
+    if (studentContext) {
+      basePrompt += `
+
+**SPECIFIC STUDENT PROFILE:**
+- Student Name: ${studentContext.name || 'Student'}
+- Age: ${studentContext.age || studentAge} years old
+
+**SUPPORT LEVELS:**
+${Object.entries(studentContext.supportLevels || {}).map(([domain, level]) => `- ${domain}: ${level}`).join('\n')}
+
+**LEARNING PROFILE:**
+- Attention Span: ${studentContext.learningProfile?.attentionSpan || 'moderate'}
+- Processing Speed: ${studentContext.learningProfile?.processingSpeed || 'moderate'}
+- Learning Modalities: ${studentContext.learningProfile?.learningModalities?.join(', ') || 'mixed'}
+
+**COMMUNICATION PROFILE:**
+- Verbal Skills: ${studentContext.communicationProfile?.verbalSkills || 'medium'}
+- Preferred Modes: ${studentContext.communicationProfile?.preferredModes?.join(', ') || 'mixed'}
+
+**SOCIAL PROFILE:**
+- Group Preference: ${studentContext.socialProfile?.groupPreference || 'flexible'}
+- Peer Interaction: ${studentContext.socialProfile?.peerInteraction || 'medium'}
+
+**EDUCATIONAL RECOMMENDATIONS:**
+${studentContext.educationalRecommendations?.instructionalStrategies?.map(strategy => `- ${strategy}`).join('\n') || '- Use individualized approach'}
+${studentContext.educationalRecommendations?.environmentalModifications?.map(mod => `- ${mod}`).join('\n') || ''}`;
+    }
 
     // Enhance prompt with autism support profile if available
     if (autismProfile) {

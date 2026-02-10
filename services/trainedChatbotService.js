@@ -8,10 +8,15 @@ import Constants from 'expo-constants';
 class TrainedChatbotService {
   constructor() {
     // Local Python server configuration
-    // Use localhost for local development
-    this.serverUrl = 'http://localhost:5001';
+    // Try multiple URLs for React Native to connect
+    this.serverUrls = [
+      'http://10.18.200.139:5001',  // Network IP
+      'http://localhost:5001',       // Localhost fallback
+      'http://127.0.0.1:5001'       // IP fallback
+    ];
+    this.serverUrl = this.serverUrls[0];
     this.isAvailable = false;
-    this.hasLoggedUnavailable = false; // Prevent spam logging
+    this.hasLoggedUnavailable = false;
     this.checkServerAvailability();
   }
 
@@ -19,26 +24,35 @@ class TrainedChatbotService {
    * Check if the Python server is running
    */
   async checkServerAvailability() {
-    try {
-      const response = await fetch(`${this.serverUrl}/health`, {
-        method: 'GET',
-        timeout: 2000 // Reduced timeout for faster fallback
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        this.isAvailable = data.chatbot_loaded;
-        if (this.isAvailable) {
-          console.log('✅ Trained chatbot server is available');
+    // Try each URL until one works
+    for (const url of this.serverUrls) {
+      try {
+        console.log(`🔍 Trying to connect to: ${url}`);
+        const response = await fetch(`${url}/health`, {
+          method: 'GET',
+          timeout: 3000
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.chatbot_loaded) {
+            this.serverUrl = url;
+            this.isAvailable = true;
+            console.log(`✅ Connected to trained chatbot at: ${url}`);
+            return;
+          }
         }
+      } catch (error) {
+        console.log(`❌ Failed to connect to ${url}: ${error.message}`);
       }
-    } catch (error) {
-      this.isAvailable = false;
-      // Only log once to avoid spam
-      if (!this.hasLoggedUnavailable) {
-        console.log('ℹ️  Trained chatbot server not available (this is normal if not running)');
-        this.hasLoggedUnavailable = true;
-      }
+    }
+    
+    // If we get here, none of the URLs worked
+    this.isAvailable = false;
+    if (!this.hasLoggedUnavailable) {
+      console.log('ℹ️  Trained chatbot server not available on any URL');
+      console.log('💡 Make sure Python server is running: python python-server/chatbot_server.py');
+      this.hasLoggedUnavailable = true;
     }
   }
 
@@ -134,7 +148,7 @@ class TrainedChatbotService {
       return {
         success: false,
         error: `Connection failed: ${error.message}`,
-        suggestion: 'Make sure the Python server is running on localhost:5000'
+        suggestion: 'Make sure the Python server is running on 10.18.200.139:5001'
       };
     }
   }

@@ -250,9 +250,41 @@ export default function StudentDetailScreen() {
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.generateButton} onPress={() => router.push('/bar/chat')}>
+          <TouchableOpacity 
+            style={styles.generateButton} 
+            onPress={() => {
+              // Store student context for AI chat
+              const studentContext = {
+                id: profile.id,
+                name: profile.studentName,
+                age: profile.age,
+                supportLevels: profile.supportLevels,
+                learningProfile: profile.learningProfile,
+                communicationProfile: profile.communicationProfile,
+                socialProfile: profile.socialProfile,
+                educationalRecommendations: profile.educationalRecommendations
+              };
+              
+              // Navigate to AI chat with student context
+              router.push({
+                pathname: '/(tabs)/ai-chat',
+                params: { 
+                  studentContext: JSON.stringify(studentContext),
+                  fromStudentProfile: 'true'
+                }
+              });
+            }}
+          >
             <Ionicons name="sparkles" size={20} color="#fff" />
-            <Text style={styles.generateButtonText}>Generate Resource</Text>
+            <Text style={styles.generateButtonText}>Generate Resource for {profile.studentName}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.historyButton} 
+            onPress={() => router.push(`/conversation-history/${profile.id}`)}
+          >
+            <Ionicons name="chatbubbles-outline" size={20} color="#2C3E50" />
+            <Text style={styles.historyButtonText}>View AI Chat History</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -432,6 +464,23 @@ const styles = StyleSheet.create({
   },
   generateButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  historyButton: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 12,
+    borderWidth: 2,
+    borderColor: '#2C3E50',
+  },
+  historyButtonText: {
+    color: '#2C3E50',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,

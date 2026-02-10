@@ -1,0 +1,834 @@
+"""
+TeachSmart for Project Module
+Integration with the actual trained autism therapy prediction model
+"""
+
+import json
+from datetime import datetime
+import random
+import joblib
+import numpy as np
+import os
+
+class AutismTherapyPredictor:
+    """Actual trained model class for autism therapy prediction"""
+    
+    def __init__(self, model_path='../teach_smart_chatbot.pkl'):
+        """Load the trained model from .pkl file"""
+        try:
+            # Adjust path relative to python-server directory
+            if not os.path.isabs(model_path):
+                model_path = os.path.join(os.path.dirname(__file__), model_path)
+            
+            model_data = joblib.load(model_path)
+            self.classifier = model_data['classifier']
+            self.vectorizer = model_data['vectorizer']
+            self.advice_map = model_data['advice_map']
+            self.is_loaded = True
+            print(f"✅ Trained model loaded from {model_path}")
+        except Exception as e:
+            print(f"❌ Error loading trained model: {e}")
+            self.is_loaded = False
+    
+    def predict_student_condition(self, value_1, value_2, value_3, activity_note):
+        """
+        Predict student condition using the trained model
+        
+        Args:
+            value_1: First assessment (benar/salah)
+            value_2: Second assessment (benar/salah)
+            value_3: Third assessment (benar/salah)
+            activity_note: Description of student behavior
+            
+        Returns:
+            Dictionary with prediction results
+        """
+        if not self.is_loaded:
+            return {"error": "Model not loaded"}
+        
+        # Convert values to numeric features
+        v1 = 1 if value_1.lower() == 'benar' else 0.5 if 'bantu' in value_1.lower() else 0
+        v2 = 1 if value_2.lower() == 'benar' else 0.5 if 'bantu' in value_2.lower() else 0
+        v3 = 1 if value_3.lower() == 'benar' else 0.5 if 'bantu' in value_3.lower() else 0
+        
+        # Create feature vector
+        value_features = np.array([[v1, v2, v3]])
+        text_features = self.vectorizer.transform([activity_note]).toarray()
+        X = np.hstack([value_features, text_features])
+        
+        # Make prediction
+        prediction = self.classifier.predict(X)[0]
+        probabilities = self.classifier.predict_proba(X)[0]
+        
+        # Map labels to conditions
+        condition_names = {
+            0: "Struggling - Needs Immediate Support",
+            1: "Progressing - Needs Continued Support", 
+            2: "Thriving - Ready for Next Level"
+        }
+        
+        return {
+            'label': int(prediction),
+            'condition': condition_names[prediction],
+            'advice': self.advice_map[prediction],
+            'confidence': float(max(probabilities)),
+            'probabilities': {
+                'struggling': float(probabilities[0]),
+                'needs_support': float(probabilities[1]) if len(probabilities) > 1 else 0.0,
+                'doing_well': float(probabilities[2]) if len(probabilities) > 2 else 0.0
+            }
+        }
+
+class TeachSmartChatbot:
+    """
+    Enhanced chatbot class that integrates with the trained autism therapy predictor
+    """
+    
+    def __init__(self):
+        self.model_name = "TeachSmart Trained Model"
+        self.version = "1.0.0"
+        
+        # Initialize the trained predictor
+        self.predictor = AutismTherapyPredictor()
+        
+    def generate_learning_resource(self, student_age=8, aet_target="", context="", 
+                                 ability_level="developing", format_type="worksheet", 
+                                 visual_support=True, text_level="simple"):
+        """
+        Generate learning resource using both trained model insights and educational content
+        """
+        
+        # Simulate processing time
+        import time
+        time.sleep(1)
+        
+        # Generate educational content
+        content = self._generate_content(student_age, aet_target, context, 
+                                       ability_level, format_type, visual_support, text_level)
+        
+        # Add model-based insights if available
+        if self.predictor.is_loaded:
+            content += self._add_model_insights(aet_target, ability_level)
+        
+        return {
+            'success': True,
+            'content': content,
+            'timestamp': datetime.now().isoformat(),
+            'metadata': {
+                'student_age': student_age,
+                'aet_target': aet_target,
+                'ability_level': ability_level,
+                'format_type': format_type,
+                'model_available': self.predictor.is_loaded
+            }
+        }
+    
+    def predict_student_progress(self, assessment_data):
+        """
+        Use the trained model to predict student progress
+        
+        Args:
+            assessment_data: Dict with keys 'value_1', 'value_2', 'value_3', 'activity_note'
+        """
+        if not self.predictor.is_loaded:
+            return {
+                'success': False,
+                'error': 'Trained model not available'
+            }
+        
+        try:
+            result = self.predictor.predict_student_condition(
+                assessment_data.get('value_1', 'salah'),
+                assessment_data.get('value_2', 'salah'), 
+                assessment_data.get('value_3', 'salah'),
+                assessment_data.get('activity_note', '')
+            )
+            
+            return {
+                'success': True,
+                'prediction': result
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def _add_model_insights(self, aet_target, ability_level):
+        """Add insights from the trained model to educational content"""
+        
+        # Create sample assessment based on ability level
+        if ability_level == 'emerging':
+            sample_assessment = {
+                'value_1': 'salah',
+                'value_2': 'salah',
+                'value_3': 'benar',
+                'activity_note': 'anak membutuhkan bantuan ekstra untuk memahami instruksi'
+            }
+        elif ability_level == 'extending':
+            sample_assessment = {
+                'value_1': 'benar',
+                'value_2': 'benar', 
+                'value_3': 'benar',
+                'activity_note': 'anak dapat mengikuti instruksi dengan baik dan mandiri'
+            }
+        else:  # developing
+            sample_assessment = {
+                'value_1': 'benar',
+                'value_2': 'salah',
+                'value_3': 'benar', 
+                'activity_note': 'anak mulai memahami dengan bantuan visual'
+            }
+        
+        # Get prediction
+        prediction_result = self.predict_student_progress(sample_assessment)
+        
+        if prediction_result['success']:
+            prediction = prediction_result['prediction']
+            return f"""
+
+## 🤖 AI Model Insights
+
+**Predicted Student Condition:** {prediction['condition']}
+**Confidence Level:** {prediction['confidence']:.1%}
+
+**Recommended Approach:**
+{prediction['advice']}
+
+**Assessment Probabilities:**
+- Struggling: {prediction['probabilities']['struggling']:.1%}
+- Needs Support: {prediction['probabilities']['needs_support']:.1%}
+- Doing Well: {prediction['probabilities']['doing_well']:.1%}
+
+*These insights are generated by your trained autism therapy prediction model.*
+"""
+        else:
+            return "\n\n## 🤖 AI Model Insights\n*Model insights unavailable for this request.*"
+    
+    def _generate_content(self, student_age, aet_target, context, ability_level, 
+                         format_type, visual_support, text_level):
+        """Generate content based on parameters"""
+        
+        # Extract key concepts from AET target
+        is_emotion_target = 'emotion' in aet_target.lower()
+        is_social_target = any(word in aet_target.lower() for word in ['social', 'turn', 'share'])
+        is_independence_target = any(word in aet_target.lower() for word in ['independence', 'routine', 'self'])
+        
+        # Generate appropriate content
+        if is_emotion_target:
+            return self._emotion_content(student_age, ability_level, format_type)
+        elif is_social_target:
+            return self._social_content(student_age, ability_level, format_type)
+        elif is_independence_target:
+            return self._independence_content(student_age, ability_level, format_type)
+        else:
+            return self._general_content(student_age, aet_target, ability_level, format_type)
+    
+    def _emotion_content(self, age, level, format_type):
+        """Generate emotion-focused content"""
+        if format_type == 'cards':
+            return """# Emotion Recognition Cards
+
+## Card 1: Happy Face
+**Visual:** Smiling face with bright eyes
+**Discussion:** "When do you feel happy?"
+**Activity:** Share something that makes you happy
+
+## Card 2: Sad Face  
+**Visual:** Downturned mouth, droopy eyes
+**Discussion:** "It's okay to feel sad sometimes"
+**Activity:** Talk about comfort strategies
+
+## Card 3: Angry Face
+**Visual:** Furrowed brow, tight mouth
+**Discussion:** "What helps when you feel angry?"
+**Activity:** Practice deep breathing
+
+## Teacher Notes:
+- Use clear, simple language
+- Allow processing time
+- Validate all emotions as normal"""
+        else:
+            return """# Emotion Recognition Worksheet
+
+## Learning Objective
+Students will identify and name basic emotions in themselves and others.
+
+## Activity 1: Emotion Faces
+Look at each face and circle the correct emotion:
+- Happy 😊
+- Sad 😢  
+- Angry 😠
+- Surprised 😮
+
+## Activity 2: Emotion Situations
+Match the situation to the feeling:
+1. Getting a present → Happy
+2. Losing a toy → Sad
+3. Someone taking your turn → Angry
+
+## Success Criteria:
+- Student can name 3 basic emotions
+- Student can match emotions to situations
+- Student can share when they felt each emotion
+
+## Teacher Support:
+- Use visual emotion cards
+- Practice emotion faces in mirror
+- Validate all emotional responses"""
+    
+    def _social_content(self, age, level, format_type):
+        """Generate social skills content"""
+        return """# Social Skills: Turn-Taking
+
+## Learning Objective
+Students will demonstrate appropriate turn-taking in group activities.
+
+## Activity 1: Turn-Taking Rules
+**Visual Schedule:**
+1. Wait for your turn
+2. Take your turn
+3. Say "Your turn" to next person
+4. Wait again
+
+## Activity 2: Practice Games
+- Roll the dice game
+- Building blocks together  
+- Sharing art supplies
+- Taking turns on tablet
+
+## Success Criteria:
+- Waits without prompting
+- Takes appropriate length turn
+- Passes turn to others
+- Shows patience while waiting
+
+## Teacher Notes:
+- Use visual timer for turn length
+- Praise waiting behavior
+- Model appropriate language
+- Keep turns short initially"""
+    
+    def _independence_content(self, age, level, format_type):
+        """Generate independence skills content"""
+        return """# Independence Skills: Daily Routines
+
+## Learning Objective
+Students will follow visual schedule for daily routines with minimal support.
+
+## Morning Routine Checklist:
+□ Hang up backpack
+□ Put lunch in cubby
+□ Wash hands
+□ Sit at desk
+□ Get out materials
+
+## Visual Supports:
+- Picture schedule on desk
+- Step-by-step cards
+- Completion checkmarks
+- "All done" signal
+
+## Success Criteria:
+- Completes 3/5 steps independently
+- Uses visual schedule without prompting
+- Asks for help when needed
+- Shows pride in completion
+
+## Teacher Support:
+- Practice routine multiple times
+- Fade prompts gradually
+- Celebrate small successes
+- Adjust pace as needed"""
+    
+    def _general_content(self, age, aet_target, level, format_type):
+        """Generate general educational content"""
+        
+        # Check for specific topics and provide targeted advice
+        target_lower = aet_target.lower()
+        
+        if 'meltdown' in target_lower or 'tantrum' in target_lower:
+            return self._meltdown_content(age, level, format_type)
+        elif 'transition' in target_lower:
+            return self._transition_content(age, level, format_type)
+        elif 'sensory' in target_lower:
+            return self._sensory_content(age, level, format_type)
+        elif 'focus' in target_lower or 'attention' in target_lower or 'concentrate' in target_lower:
+            return self._focus_content(age, level, format_type)
+        else:
+            return f"""# Learning Resource: {aet_target}
+
+## Learning Objective
+{aet_target}
+
+## Age-Appropriate Activities (Age {age}):
+
+### Activity 1: Introduction
+- Clear explanation with visual supports
+- Step-by-step demonstration
+- Practice opportunities
+
+### Activity 2: Guided Practice
+- Teacher support available
+- Peer interaction encouraged
+- Multiple ways to show understanding
+
+### Activity 3: Independent Practice
+- Student works at own pace
+- Choice in how to demonstrate learning
+- Success criteria clearly defined
+
+## Differentiation for {level.title()} Level:
+- Provide additional visual supports
+- Break tasks into smaller steps
+- Allow extra processing time
+- Offer multiple response options
+
+## Assessment:
+- Observe student engagement
+- Note progress toward objective
+- Document successful strategies
+- Plan next steps
+
+## Teacher Notes:
+- Maintain predictable routine
+- Use student's interests when possible
+- Provide positive reinforcement
+- Allow for sensory breaks as needed"""
+    
+    def _meltdown_content(self, age, level, format_type):
+        """Generate meltdown-specific content"""
+        return """# Managing Meltdowns: Autism Support Guide
+
+## Understanding Meltdowns
+Meltdowns are not tantrums - they're neurological responses to overwhelming situations.
+
+## Immediate Response Strategy:
+
+### 1. Stay Calm
+- Keep your voice low and steady
+- Avoid sudden movements
+- Don't take it personally
+
+### 2. Ensure Safety
+- Clear the area of potential hazards
+- Give the student space
+- Remove or reduce triggers if possible
+
+### 3. Reduce Stimulation
+- Lower lights if possible
+- Reduce noise levels
+- Minimize visual distractions
+- Offer noise-canceling headphones
+
+## During the Meltdown:
+
+### DO:
+- Stay nearby but give space
+- Use simple, calm language
+- Offer comfort items (weighted blanket, fidget toy)
+- Wait patiently - meltdowns have to run their course
+
+### DON'T:
+- Try to reason or negotiate
+- Touch without permission
+- Raise your voice
+- Give demands or instructions
+
+## After the Meltdown:
+
+### Recovery Phase:
+- Allow time to recover
+- Offer water or preferred snack
+- Provide quiet space
+- Check in gently: "How are you feeling?"
+
+### Prevention Planning:
+- Identify triggers that led to meltdown
+- Adjust environment or schedule
+- Teach coping strategies during calm times
+- Create visual supports for regulation
+
+## Long-term Strategies:
+
+### Environmental Modifications:
+- Predictable routines and schedules
+- Visual schedules and timers
+- Quiet retreat space available
+- Sensory tools accessible
+
+### Teaching Self-Regulation:
+- Deep breathing exercises
+- Identify early warning signs
+- Use of break cards or signals
+- Practice coping strategies regularly
+
+## Communication with Parents:
+- Share what worked/didn't work
+- Discuss triggers observed
+- Coordinate strategies between home and school
+- Plan for future situations
+
+## Remember:
+- Meltdowns are communication - the student is overwhelmed
+- Recovery takes time - don't rush back to activities
+- Each student is different - strategies may need adjustment
+- Prevention is better than intervention"""
+    
+    def _transition_content(self, age, level, format_type):
+        """Generate transition-specific content"""
+        return """# Supporting Smooth Transitions
+
+## Understanding Transition Difficulties
+Students with autism often struggle with transitions due to:
+- Need for predictability
+- Processing time requirements
+- Difficulty with change
+- Sensory overwhelm
+
+## Visual Transition Supports:
+
+### 1. Visual Schedules
+- Picture schedule showing daily activities
+- "First/Then" boards for immediate transitions
+- Countdown timers (visual or auditory)
+- Transition cards or symbols
+
+### 2. Preparation Strategies
+- Give 5-minute, 2-minute, and 1-minute warnings
+- Use consistent transition language
+- Show what's coming next
+- Allow processing time
+
+## Transition Techniques:
+
+### For Difficult Transitions:
+- Use preferred activities as motivation
+- Offer choices when possible
+- Use transition objects (carry something to next activity)
+- Create transition rituals or songs
+
+### Environmental Supports:
+- Clear pathways between activities
+- Reduce distractions during transitions
+- Consistent seating arrangements
+- Familiar adults to guide transitions
+
+## Teaching Independence:
+- Practice transitions during calm times
+- Use self-monitoring checklists
+- Teach time awareness skills
+- Gradually fade adult support
+
+## Crisis Prevention:
+- Identify difficult transition times
+- Plan extra support for challenging transitions
+- Have backup plans ready
+- Communicate with team about strategies that work"""
+    
+    def _sensory_content(self, age, level, format_type):
+        """Generate sensory-specific content"""
+        return """# Sensory Support Strategies
+
+## Understanding Sensory Needs
+Students with autism may be:
+- Over-responsive (hypersensitive)
+- Under-responsive (hyposensitive)  
+- Seeking sensory input
+- Avoiding sensory input
+
+## Sensory Tools and Strategies:
+
+### Visual Supports:
+- Reduce fluorescent lighting
+- Use natural light when possible
+- Provide sunglasses or hat for bright environments
+- Create visual calm-down spaces
+
+### Auditory Supports:
+- Noise-canceling headphones
+- Soft background music
+- Reduce sudden loud noises
+- Provide quiet retreat spaces
+
+### Tactile Supports:
+- Fidget toys and stress balls
+- Weighted lap pads or blankets
+- Different textures for exploration
+- Gloves for messy activities
+
+### Movement Supports:
+- Movement breaks every 20-30 minutes
+- Yoga ball seating options
+- Standing desk alternatives
+- Heavy work activities (carrying books, etc.)
+
+## Creating a Sensory-Friendly Environment:
+- Organize spaces to reduce clutter
+- Provide consistent seating arrangements
+- Offer multiple seating options
+- Create designated calm spaces
+
+## Individual Sensory Plans:
+- Observe and document sensory preferences
+- Create personalized sensory diet
+- Teach self-advocacy for sensory needs
+- Collaborate with occupational therapist if available"""
+    
+    def _focus_content(self, age, level, format_type):
+        """Generate focus and attention-specific content"""
+        return """# Improving Focus and Attention in Students with Autism
+
+## Understanding Attention Challenges
+Students with autism may struggle with focus due to:
+- Sensory processing differences
+- Executive function challenges
+- Difficulty filtering distractions
+- Need for predictable routines
+- Processing time requirements
+
+## Environmental Modifications:
+
+### Reduce Distractions:
+- Minimize visual clutter on walls and desks
+- Use neutral colors and organized spaces
+- Position student away from high-traffic areas
+- Reduce background noise and sudden sounds
+- Use natural lighting when possible
+
+### Create Focus-Friendly Spaces:
+- Designated quiet work areas
+- Study carrels or privacy screens
+- Consistent seating arrangements
+- Clear boundaries between activity areas
+- Remove unnecessary materials from workspace
+
+## Teaching Strategies:
+
+### Break Tasks into Smaller Steps:
+- Provide one instruction at a time
+- Use visual task lists or checklists
+- Set short, achievable goals (5-10 minutes initially)
+- Celebrate completion of each step
+- Gradually increase task duration
+
+### Use Visual Supports:
+- Visual schedules showing daily activities
+- Timer showing time remaining for tasks
+- "First/Then" boards for motivation
+- Visual cues for attention (pointing, highlighting)
+- Picture instructions for complex tasks
+
+### Incorporate Movement:
+- Allow fidget tools (stress balls, fidget cubes)
+- Provide movement breaks every 15-20 minutes
+- Use standing desks or exercise balls
+- Include "heavy work" activities (carrying supplies)
+- Allow quiet movement during lessons
+
+## Attention-Building Activities:
+
+### Start Small:
+- Begin with 2-3 minute focused activities
+- Use highly preferred activities initially
+- Gradually increase duration as success builds
+- Track progress visually with charts
+
+### Use Special Interests:
+- Incorporate student's interests into lessons
+- Use preferred topics as examples
+- Allow choice in activity topics when possible
+- Connect new learning to known interests
+
+## Behavioral Supports:
+
+### Clear Expectations:
+- Teach what "paying attention" looks like
+- Use visual cues for attention behaviors
+- Practice attention skills during calm times
+- Provide specific praise for attention behaviors
+
+### Positive Reinforcement:
+- Immediate praise for focused behavior
+- Token systems for sustained attention
+- Preferred activities as rewards
+- Visual progress tracking
+
+## Remember:
+- Attention difficulties are neurological, not behavioral
+- Every student's attention profile is different
+- Consistency and patience are key
+- Small improvements should be celebrated"""
+    
+    def _focus_content(self, age, level, format_type):
+        """Generate focus and attention-specific content"""
+    
+    def format_resource(self, resource_data):
+        """Format the resource for display"""
+        if not resource_data or not resource_data.get('success'):
+            return "Error: Unable to format resource"
+        
+        content = resource_data.get('content', '')
+        metadata = resource_data.get('metadata', {})
+        
+        # Add header with metadata
+        formatted = f"""# Generated Learning Resource
+
+**Created:** {resource_data.get('timestamp', 'Unknown')}
+**Student Age:** {metadata.get('student_age', 'Not specified')}
+**Ability Level:** {metadata.get('ability_level', 'Not specified')}
+**Format:** {metadata.get('format_type', 'Not specified')}
+
+---
+
+{content}
+
+---
+
+*Generated by TeachSmart Trained Model*
+"""
+        return formatted
+
+# For backward compatibility, create any other classes your model might need
+class ResourceGenerator(TeachSmartChatbot):
+    """Alias for TeachSmartChatbot"""
+    pass
+
+class AutismEducationBot(TeachSmartChatbot):
+    """Alias for TeachSmartChatbot"""
+    pass
+
+class TeachSmart(TeachSmartChatbot):
+    """Main TeachSmart class - alias for TeachSmartChatbot"""
+    pass
+
+# Export commonly used classes
+__all__ = ['TeachSmartChatbot', 'ResourceGenerator', 'AutismEducationBot', 'TeachSmart']
+
+## Environmental Modifications:
+
+### Reduce Distractions:
+- Minimize visual clutter on walls and desks
+- Use neutral colors and organized spaces
+- Position student away from high-traffic areas
+- Reduce background noise and sudden sounds
+- Use natural lighting when possible
+
+### Create Focus-Friendly Spaces:
+- Designated quiet work areas
+- Study carrels or privacy screens
+- Consistent seating arrangements
+- Clear boundaries between activity areas
+- Remove unnecessary materials from workspace
+
+## Teaching Strategies:
+
+### Break Tasks into Smaller Steps:
+- Provide one instruction at a time
+- Use visual task lists or checklists
+- Set short, achievable goals (5-10 minutes initially)
+- Celebrate completion of each step
+- Gradually increase task duration
+
+### Use Visual Supports:
+- Visual schedules showing daily activities
+- Timer showing time remaining for tasks
+- "First/Then" boards for motivation
+- Visual cues for attention (pointing, highlighting)
+- Picture instructions for complex tasks
+
+### Incorporate Movement:
+- Allow fidget tools (stress balls, fidget cubes)
+- Provide movement breaks every 15-20 minutes
+- Use standing desks or exercise balls
+- Include "heavy work" activities (carrying supplies)
+- Allow quiet movement during lessons
+
+## Attention-Building Activities:
+
+### Start Small:
+- Begin with 2-3 minute focused activities
+- Use highly preferred activities initially
+- Gradually increase duration as success builds
+- Track progress visually with charts
+
+### Use Special Interests:
+- Incorporate student's interests into lessons
+- Use preferred topics as examples
+- Allow choice in activity topics when possible
+- Connect new learning to known interests
+
+### Structured Attention Games:
+- Simon Says with academic content
+- Matching games with learning objectives
+- Scavenger hunts for specific information
+- Timed challenges with visual supports
+
+## Behavioral Supports:
+
+### Clear Expectations:
+- Teach what "paying attention" looks like
+- Use visual cues for attention behaviors
+- Practice attention skills during calm times
+- Provide specific praise for attention behaviors
+
+### Positive Reinforcement:
+- Immediate praise for focused behavior
+- Token systems for sustained attention
+- Preferred activities as rewards
+- Visual progress tracking
+
+### Self-Monitoring Tools:
+- Attention self-check cards
+- "Am I focused?" reminder systems
+- Student-friendly attention rating scales
+- Break request cards when overwhelmed
+
+## Communication Strategies:
+
+### Getting Attention:
+- Use student's name before giving instructions
+- Wait for eye contact or acknowledgment
+- Use consistent attention-getting signals
+- Speak clearly and at appropriate pace
+
+### Maintaining Engagement:
+- Check for understanding frequently
+- Use interactive teaching methods
+- Vary your voice tone and pace
+- Include student responses in lessons
+
+## Working with Families:
+
+### Home-School Consistency:
+- Share successful attention strategies
+- Coordinate homework expectations
+- Discuss optimal times for focused work
+- Plan for attention breaks at home
+
+### Environmental Considerations:
+- Recommend quiet homework spaces
+- Suggest consistent routines
+- Share sensory tools that help at school
+- Discuss screen time and attention impacts
+
+## Long-term Development:
+
+### Building Stamina:
+- Gradually increase attention expectations
+- Celebrate improvements in focus duration
+- Track progress over time
+- Adjust goals based on individual growth
+
+### Teaching Self-Advocacy:
+- Help student recognize when they need breaks
+- Teach appropriate ways to request help
+- Develop personal attention strategies
+- Build awareness of optimal learning conditions
+
+## Remember:
+- Attention difficulties are neurological, not behavioral
+- Every student's attention profile is different
+- Consistency and patience are key
+- Small improvements should be celebrated
+- Focus on strengths while addressing challenges"""

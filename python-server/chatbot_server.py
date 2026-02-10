@@ -188,6 +188,38 @@ if FLASK_AVAILABLE:
                 'error': f'Connection test failed: {str(e)}'
             })
 
+    @app.route('/predict-student', methods=['POST'])
+    def predict_student():
+        """Predict student condition using the trained model"""
+        try:
+            if chatbot is None:
+                return jsonify({
+                    'success': False,
+                    'error': 'Chatbot model not loaded'
+                }), 500
+
+            # Get request data
+            data = request.get_json()
+            
+            # Check if the chatbot has prediction capability
+            if not hasattr(chatbot, 'predict_student_progress'):
+                return jsonify({
+                    'success': False,
+                    'error': 'Prediction capability not available'
+                }), 400
+
+            # Make prediction
+            result = chatbot.predict_student_progress(data)
+            
+            return jsonify(result)
+
+        except Exception as e:
+            logger.error(f"Error predicting student condition: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Server error: {str(e)}'
+            }), 500
+
     @app.route('/get-aet-targets', methods=['GET'])
     def get_aet_targets():
         """Get available AET targets from the trained model"""

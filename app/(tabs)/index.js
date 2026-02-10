@@ -117,9 +117,10 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#FAFBFC' }]}>
       <ParallaxScrollView
-        headerBackgroundColor={{ light: '#2C3E50', dark: '#1A1D23' }}
+        headerBackgroundColor={{ light: '#5DADE2', dark: '#5DADE2' }}
+        forceColorScheme="light"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -168,7 +169,7 @@ export default function HomeScreen() {
 
         {/* Active Student Profile */}
         {activeProfile && (
-          <ThemedView style={styles.activeProfileCard}>
+          <ThemedView style={styles.activeProfileCard} lightColor="#FFFFFF" darkColor="#252A32">
             <View style={styles.profileHeader}>
               <View style={styles.profileInfo}>
                 <View style={styles.profileBadge}>
@@ -201,7 +202,7 @@ export default function HomeScreen() {
         )}
 
         {/* Weekly Progress */}
-        <ThemedView style={styles.progressCard}>
+        <ThemedView style={styles.progressCard} lightColor="#FFFFFF" darkColor="#252A32">
           <View style={styles.progressHeader}>
             <Text style={styles.progressTitle}>This Week's Progress</Text>
             <Text style={styles.progressValue}>{stats.weeklyProgress}/5</Text>
@@ -226,7 +227,7 @@ export default function HomeScreen() {
         </ThemedView>
 
         {/* Quick Actions */}
-        <ThemedView style={styles.quickActionsCard}>
+        <ThemedView style={styles.quickActionsCard} lightColor="#FFFFFF" darkColor="#252A32">
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           
           <View style={styles.actionsGrid}>
@@ -267,7 +268,7 @@ export default function HomeScreen() {
 
         {/* Recent Activity */}
         {recentActivity.length > 0 && (
-          <ThemedView style={styles.recentActivityCard}>
+          <ThemedView style={styles.recentActivityCard} lightColor="#FFFFFF" darkColor="#252A32">
             <View style={styles.recentActivityHeader}>
               <Text style={styles.sectionTitle}>Recent Activity</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/test')}>

@@ -1,2 +1,5 @@
 Flask
 Flask-CORS
+joblib
+scikit-learn
+numpy

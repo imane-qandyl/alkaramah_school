@@ -398,15 +398,17 @@ export default function TeacherProfileScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#FAFBFC' }]}>
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
+        style={{ backgroundColor: '#FAFBFC' }}
       >
         <ParallaxScrollView
-          headerBackgroundColor={{ light: '#2C3E50', dark: '#1A1D23' }}
+          headerBackgroundColor={{ light: '#5DADE2', dark: '#5DADE2' }}
+          forceColorScheme="light"
           headerImage={
             <View style={styles.headerContent}>
               <View style={styles.headerTop}>
@@ -447,7 +449,7 @@ export default function TeacherProfileScreen() {
           }>
 
         {/* Professional Summary */}
-        <ThemedView style={styles.summaryCard}>
+        <ThemedView style={styles.summaryCard} lightColor="#FFFFFF" darkColor="#252A32">
           <View style={styles.summaryHeader}>
             <Ionicons name="briefcase" size={24} color="#2C3E50" />
             <Text style={styles.summaryTitle}>Professional Summary</Text>
@@ -469,7 +471,7 @@ export default function TeacherProfileScreen() {
 
         {/* Recent Activity */}
         {recentActivity.length > 0 && (
-          <ThemedView style={styles.activityCard}>
+          <ThemedView style={styles.activityCard} lightColor="#FFFFFF" darkColor="#252A32">
             <View style={styles.activityHeader}>
               <Text style={styles.sectionTitle}>Recent Activity</Text>
               <TouchableOpacity onPress={() => router.push('./test')}>
@@ -507,7 +509,7 @@ export default function TeacherProfileScreen() {
 
 
         {/* AI Configuration */}
-        <ThemedView style={styles.aiConfigCard}>
+        <ThemedView style={styles.aiConfigCard} lightColor="#FFFFFF" darkColor="#252A32">
           <Text style={styles.sectionTitle}>AI Configuration</Text>
           
           {/* Azure OpenAI Test */}
@@ -583,7 +585,7 @@ export default function TeacherProfileScreen() {
 
 
         {/* Support & Help */}
-        <ThemedView style={styles.supportCard}>
+        <ThemedView style={styles.supportCard} lightColor="#FFFFFF" darkColor="#252A32">
           <Text style={styles.sectionTitle}>Support & Resources</Text>
           
           <View style={styles.supportGrid}>
