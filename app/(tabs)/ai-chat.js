@@ -24,6 +24,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { conversationHistoryService } from '@/services/conversationHistoryService';
 import { imageGenerationService } from '@/services/imageGenerationService';
 import EnhancedImageTestModal from '@/components/EnhancedImageTestModal';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 
 export default function AIChatScreen() {
   const router = useRouter();
@@ -62,7 +65,7 @@ Some suggestions:
 • "Generate activities for their learning style"
 • "Help with behavior management strategies"`;
     } else {
-      return "Hello! I'm your AI teaching assistant powered by your trained model. I can help you with:\n\n• Creating lesson plans\n• Autism-friendly teaching strategies\n• AET target suggestions\n• Classroom management tips\n• Resource ideas\n\nWhat would you like to discuss?";
+      return "Welcome! I'm your trained autism education prediction model. I specialize in:\n\n• **Student Condition Prediction** - Classify learning status based on assessment data\n• **Support Level Recommendations** - Evidence-based guidance for intervention intensity\n• **Progress Classification** - Determine if students need immediate, continued, or advanced support\n• **Confidence Scoring** - Reliable predictions with accuracy percentages\n• **Educational Decision Support** - Data-driven insights for autism-friendly teaching\n\nProvide assessment results (3 tasks + observations) and I'll predict your student's current condition and recommended support approach.\n\nWhat assessment data would you like me to analyze?";
     }
   };
   
@@ -307,22 +310,36 @@ Some suggestions:
 
   // Detect if user is requesting image generation
   const detectImageRequest = (input) => {
-    const imageKeywords = [
-      'generate image', 'create image', 'make image', 'draw image',
-      'generate picture', 'create picture', 'make picture', 'draw picture',
-      'show me image', 'show me picture', 'visual', 'illustration',
-      'generate visual', 'create visual', 'make visual',
-      'image of', 'picture of', 'visual of',
-      // Enhanced features
-      'style variations', 'different styles', 'multiple styles',
-      'social story image', 'visual schedule', 'sensory friendly image',
-      'enhanced image', 'autism friendly image', 'educational image',
-      // Steps
-      'by steps', 'step by step', 'steps for', 'how to', 'instructions for'
+    const lowerInput = input.toLowerCase();
+    
+    // First check if this looks like assessment data - if so, don't generate images
+    const assessmentPatterns = [
+      /task\s*\d+\s*:/i,
+      /benar|salah|bantu/i,
+      /notes?\s*:/i,
+      /observation/i
     ];
     
-    const lowerInput = input.toLowerCase();
-    return imageKeywords.some(keyword => lowerInput.includes(keyword));
+    if (assessmentPatterns.some(pattern => pattern.test(input))) {
+      return false;
+    }
+    
+    // Only trigger on explicit image generation requests
+    const explicitImageKeywords = [
+      'generate image', 'create image', 'make image', 'draw image',
+      'generate picture', 'create picture', 'make picture', 'draw picture',
+      'show me image', 'show me picture', 'generate visual', 'create visual',
+      'image of', 'picture of', 'visual of',
+      // Enhanced features - but only when explicitly requested
+      'generate style variations', 'create different styles', 'make multiple styles',
+      'generate social story image', 'create visual schedule', 'make sensory friendly image',
+      'generate enhanced image', 'create autism friendly image', 'make educational image',
+      // Steps - but only when explicitly requested for image generation
+      'generate steps image', 'create step by step image', 'make instructions image',
+      'show me how to', 'visual instructions for'
+    ];
+    
+    return explicitImageKeywords.some(keyword => lowerInput.includes(keyword));
   };
 
   // Handle image generation requests
@@ -409,7 +426,7 @@ Some suggestions:
           // Handle single enhanced image
           const imageMessage = {
             id: Date.now() + 2,
-            text: `Here's your enhanced autism-friendly image of "${action}":\n\n🎯 Style: ${result.metadata?.stylePreset || stylePreset}\n✨ Quality: ${result.metadata?.qualityLevel || qualityLevel}\n🎨 Enhanced with specialized autism-friendly design principles`,
+            text: `Here's your enhanced autism-friendly image of "${action}":`,
             isAI: true,
             timestamp: new Date(),
             image: result.image,
@@ -696,6 +713,59 @@ Some suggestions:
     }
   };
 
+  // Download image function
+  const handleDownloadImage = async (imageUri, metadata) => {
+    try {
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please grant permission to save images to your photo library.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const action = metadata?.action || 'autism-friendly-image';
+      const filename = `${action.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}.png`;
+
+      // Download the image to a temporary location
+      const downloadResult = await FileSystem.downloadAsync(
+        imageUri,
+        FileSystem.documentDirectory + filename
+      );
+
+      if (downloadResult.status === 200) {
+        // Save to media library
+        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+        
+        Alert.alert(
+          'Image Saved',
+          'The image has been saved to your photo library!',
+          [
+            { text: 'OK' },
+            { 
+              text: 'Share', 
+              onPress: () => Sharing.shareAsync(downloadResult.uri)
+            }
+          ]
+        );
+      } else {
+        throw new Error('Download failed');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      Alert.alert(
+        'Download Failed',
+        'Unable to download the image. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   const showExportOptions = (message) => {
     Alert.alert(
       'Export Options',
@@ -813,21 +883,13 @@ Some suggestions:
                     style={styles.generatedImage}
                     resizeMode="contain"
                   />
-                  {message.imageMetadata && (
-                    <View style={styles.imageMetadata}>
-                      <Text style={styles.imageMetadataText}>
-                        Style: {message.imageMetadata.stylePreset || 'autism-friendly'}
-                      </Text>
-                      <Text style={styles.imageMetadataText}>
-                        Quality: {message.imageMetadata.qualityLevel || 'child-friendly'}
-                      </Text>
-                      {message.imageMetadata.generatedAt && (
-                        <Text style={styles.imageMetadataText}>
-                          Generated: {new Date(message.imageMetadata.generatedAt).toLocaleTimeString()}
-                        </Text>
-                      )}
-                    </View>
-                  )}
+                  <TouchableOpacity
+                    style={styles.downloadButton}
+                    onPress={() => handleDownloadImage(message.image, message.imageMetadata)}
+                  >
+                    <Ionicons name="download-outline" size={20} color="#fff" />
+                    <Text style={styles.downloadButtonText}>Download</Text>
+                  </TouchableOpacity>
                 </View>
               )}
               
@@ -846,6 +908,12 @@ Some suggestions:
                               resizeMode="contain"
                             />
                             <Text style={styles.variationLabel}>{variation.style}</Text>
+                            <TouchableOpacity
+                              style={styles.variationDownloadButton}
+                              onPress={() => handleDownloadImage(variation.image, { ...variation.metadata, style: variation.style })}
+                            >
+                              <Ionicons name="download-outline" size={16} color="#007bff" />
+                            </TouchableOpacity>
                           </>
                         ) : (
                           <View style={styles.variationError}>
@@ -870,11 +938,20 @@ Some suggestions:
                       </View>
                       <Text style={styles.stepDescription}>{step.description}</Text>
                       {step.image && (
-                        <Image
-                          source={{ uri: step.image }}
-                          style={styles.stepImage}
-                          resizeMode="contain"
-                        />
+                        <View style={styles.stepImageContainer}>
+                          <Image
+                            source={{ uri: step.image }}
+                            style={styles.stepImage}
+                            resizeMode="contain"
+                          />
+                          <TouchableOpacity
+                            style={styles.stepDownloadButton}
+                            onPress={() => handleDownloadImage(step.image, { ...step.imageMetadata, step: step.label })}
+                          >
+                            <Ionicons name="download-outline" size={16} color="#007bff" />
+                            <Text style={styles.stepDownloadButtonText}>Download</Text>
+                          </TouchableOpacity>
+                        </View>
                       )}
                     </View>
                   ))}
@@ -1211,6 +1288,22 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 8,
   },
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007bff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    margin: 8,
+    borderRadius: 6,
+    gap: 6,
+  },
+  downloadButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   imageMetadata: {
     padding: 8,
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
@@ -1249,6 +1342,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  variationDownloadButton: {
+    marginTop: 4,
+    padding: 4,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#007bff',
   },
   variationError: {
     width: 100,
@@ -1315,5 +1417,26 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 6,
     backgroundColor: '#e9ecef',
+  },
+  stepImageContainer: {
+    marginTop: 8,
+  },
+  stepDownloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginTop: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#007bff',
+    gap: 4,
+  },
+  stepDownloadButtonText: {
+    color: '#007bff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

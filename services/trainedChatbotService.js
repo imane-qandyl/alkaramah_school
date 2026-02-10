@@ -10,9 +10,10 @@ class TrainedChatbotService {
     // Local Python server configuration
     // Try multiple URLs for React Native to connect
     this.serverUrls = [
-      'http://10.18.200.139:5001',  // Network IP
-      'http://localhost:5001',       // Localhost fallback
-      'http://127.0.0.1:5001'       // IP fallback
+      'http://localhost:5001',       // Localhost first
+      'http://127.0.0.1:5001',       // IP fallback
+      'http://192.168.1.133:5001',   // Network IP from server output
+      'http://10.18.200.139:5001'    // Previous network IP
     ];
     this.serverUrl = this.serverUrls[0];
     this.isAvailable = false;
@@ -148,7 +149,7 @@ class TrainedChatbotService {
       return {
         success: false,
         error: `Connection failed: ${error.message}`,
-        suggestion: 'Make sure the Python server is running on 10.18.200.139:5001'
+        suggestion: 'Make sure the Python server is running on localhost:5001'
       };
     }
   }

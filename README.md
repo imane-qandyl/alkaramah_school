@@ -206,3 +206,35 @@ Check AI service status in the Profile tab to ensure optimal performance.
 ---
 
 *For technical support or questions about the AI chatbot functionality, refer to the troubleshooting section above or check the AI service status in the app.*
+
+
+
+
+Student: Ahmed, Age 6
+Task 1: salah
+Task 2: salah  
+Task 3: benar
+Notes: Ahmed had a tantrum during math activity and refused to count. He threw the blocks and needed calming time. Only completed color sorting with full teacher assistance.
+
+
+Student: Sara, Age 7
+Task 1: benar
+Task 2: salah
+Task 3: benar
+Notes: Sara completed the puzzle independently but struggled with writing her name. She needed visual prompts and encouragement but stayed focused for 8 minutes.
+
+
+Student: Layla, Age 5
+Task 1: salah
+Task 2: benar
+Task 3: salah
+Notes: Layla couldn't wait for her turn with the tablet and grabbed it from her peer. She completed the matching game well but had difficulty sharing materials during group work.
+
+
+
+Task 1: salah, Task 2: salah, Task 3: benar
+Notes: Student having meltdown, needs calming support
+
+
+Task 1: benar, Task 2: salah, Task 3: bantu
+Notes: Student shows progress but needs continued visual supports

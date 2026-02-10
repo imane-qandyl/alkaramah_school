@@ -13,6 +13,9 @@ import {
   Dimensions,
 } from 'react-native';
 import { imageGenerationService } from '../services/imageGenerationService';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
 
 interface ImageGenerationModalProps {
   visible: boolean;
@@ -126,6 +129,58 @@ export default function ImageGenerationModal({
       );
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleDownloadImage = async (imageUri: string, metadata: any) => {
+    try {
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please grant permission to save images to your photo library.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const action = metadata?.action || 'autism-friendly-image';
+      const filename = `${action.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}.png`;
+
+      // Download the image to a temporary location
+      const downloadResult = await FileSystem.downloadAsync(
+        imageUri,
+        FileSystem.documentDirectory + filename
+      );
+
+      if (downloadResult.status === 200) {
+        // Save to media library
+        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+        
+        Alert.alert(
+          'Image Saved',
+          'The image has been saved to your photo library!',
+          [
+            { text: 'OK' },
+            { 
+              text: 'Share', 
+              onPress: () => Sharing.shareAsync(downloadResult.uri)
+            }
+          ]
+        );
+      } else {
+        throw new Error('Download failed');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      Alert.alert(
+        'Download Failed',
+        'Unable to download the image. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -246,17 +301,12 @@ export default function ImageGenerationModal({
               </View>
               
               {imageMetadata && (
-                <View style={styles.metadata}>
-                  <Text style={styles.metadataText}>
-                    Action: {imageMetadata.action}
-                  </Text>
-                  <Text style={styles.metadataText}>
-                    Size: {imageMetadata.size}
-                  </Text>
-                  <Text style={styles.metadataText}>
-                    Generated: {new Date(imageMetadata.generatedAt).toLocaleString()}
-                  </Text>
-                </View>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => handleDownloadImage(generatedImage, imageMetadata)}
+                >
+                  <Text style={styles.downloadButtonText}>Download Image</Text>
+                </TouchableOpacity>
               )}
 
               <TouchableOpacity
@@ -396,6 +446,10 @@ const styles = StyleSheet.create({
   useButton: {
     backgroundColor: '#28a745',
     marginTop: 16,
+  },
+  downloadButton: {
+    backgroundColor: '#007bff',
+    marginTop: 12,
   },
   buttonText: {
     color: '#fff',
