@@ -361,28 +361,28 @@ export default function ResourceLibraryScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
       {/* Header */}
-      <ThemedView style={styles.header}>
+      <ThemedView style={styles.header} lightColor="#FFFFFF" darkColor="#FFFFFF">
         <ThemedText type="title" style={styles.headerTitle}>Resource Library</ThemedText>
       </ThemedView>
 
       {/* Statistics Cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#2C3E50' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#2C3E50' }]} lightColor="#2C3E50" darkColor="#2C3E50">
           <Ionicons name="library-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.total}</ThemedText>
           <ThemedText style={styles.statLabel}>Total </ThemedText>
         </ThemedView>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#5DADE2' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#5DADE2' }]} lightColor="#5DADE2" darkColor="#5DADE2">
           <Ionicons name="document-text-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.worksheets}</ThemedText>
           <ThemedText style={styles.statLabel}>Worksheets</ThemedText>
         </ThemedView>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#E67E22' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#E67E22' }]} lightColor="#E67E22" darkColor="#E67E22">
           <Ionicons name="images-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.cards}</ThemedText>
           <ThemedText style={styles.statLabel}>Activity Cards</ThemedText>
         </ThemedView>
-        <ThemedView style={[styles.statCard, { backgroundColor: '#7FB8A3' }]}>
+        <ThemedView style={[styles.statCard, { backgroundColor: '#7FB8A3' }]} lightColor="#7FB8A3" darkColor="#7FB8A3">
           <Ionicons name="easel-outline" size={24} color="white" />
           <ThemedText style={styles.statNumber}>{stats.slides}</ThemedText>
           <ThemedText style={styles.statLabel}>Slides</ThemedText>
@@ -390,7 +390,7 @@ export default function ResourceLibraryScreen() {
       </ScrollView>
 
       {/* Search and Controls */}
-      <ThemedView style={styles.searchContainer}>
+      <ThemedView style={styles.searchContainer} lightColor="#FFFFFF" darkColor="#FFFFFF">
         <View style={styles.searchInputContainer}>
           <Ionicons name="search-outline" size={20} color="#666" style={styles.searchIcon} />
           <TextInput
@@ -457,13 +457,13 @@ export default function ResourceLibraryScreen() {
 
       {/* Loading State */}
       {loading ? (
-        <ThemedView style={styles.loadingContainer}>
+        <ThemedView style={styles.loadingContainer} lightColor="#FFFFFF" darkColor="#FFFFFF">
           <Ionicons name="library-outline" size={48} color="#ccc" />
           <ThemedText style={styles.loadingText}>Loading your resources...</ThemedText>
         </ThemedView>
       ) : filteredAndSortedResources.length === 0 ? (
         /* Empty State */
-        <ThemedView style={styles.emptyContainer}>
+        <ThemedView style={styles.emptyContainer} lightColor="#FFFFFF" darkColor="#FFFFFF">
           <Ionicons name="library-outline" size={64} color="#ccc" />
           <ThemedText style={styles.emptyTitle}>
             {searchQuery || selectedFilter !== 'All' ? 'No matching resources' : 'No resources yet'}
@@ -567,60 +567,12 @@ export default function ResourceLibraryScreen() {
         </View>
       )}
 
-      {/* Quick Actions */}
-      {filteredAndSortedResources.length > 0 && (
-        <ThemedView style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => {
-            Alert.alert('Export All', 'Export all resources feature coming soon!');
-          }}>
-            <Ionicons name="download-outline" size={20} color="#2C3E50" />
-            <ThemedText style={styles.actionText}>Export All</ThemedText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton} onPress={() => {
-            Alert.alert('Share Library', 'Share library feature coming soon!');
-          }}>
-            <Ionicons name="share-outline" size={20} color="#2C3E50" />
-            <ThemedText style={styles.actionText}>Share Library</ThemedText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton} onPress={() => {
-            Alert.alert('Organize', 'Organization features coming soon!');
-          }}>
-            <Ionicons name="folder-outline" size={20} color="#2C3E50" />
-            <ThemedText style={styles.actionText}>Organize</ThemedText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.actionButton} onPress={() => setShowImageGeneration(true)}>
-            <Ionicons name="image-outline" size={20} color="#2C3E50" />
-            <ThemedText style={styles.actionText}>Generate Images</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton} onPress={() => setShowImageSetup(true)}>
-            <Ionicons name="settings-outline" size={20} color="#2C3E50" />
-            <ThemedText style={styles.actionText}>Image Setup</ThemedText>
-          </TouchableOpacity>
-          
-
-        </ThemedView>
-      )}
-
       {/* Create Resource Modal */}
       <CreateResourceModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSave={handleCreateResource}
       />
-
-      {/* Floating Action Button */}
-      {filteredAndSortedResources.length > 0 && (
-        <TouchableOpacity 
-          style={styles.floatingActionButton}
-          onPress={() => setShowCreateModal(true)}
-        >
-          <Ionicons name="add" size={24} color="white" />
-        </TouchableOpacity>
-      )}
     </ScrollView>
     </SafeAreaView>
   );
@@ -958,21 +910,5 @@ const styles = StyleSheet.create({
     color: '#8B9DC3',
     fontWeight: '500',
     fontFamily: 'SF Pro Text',
-  },
-  floatingActionButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2C3E50',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#2C3E50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });

@@ -169,7 +169,7 @@ export default function HomeScreen() {
 
         {/* Active Student Profile */}
         {activeProfile && (
-          <ThemedView style={styles.activeProfileCard} lightColor="#FFFFFF" darkColor="#252A32">
+          <ThemedView style={styles.activeProfileCard} lightColor="#FFFFFF" darkColor="#FFFFFF">
             <View style={styles.profileHeader}>
               <View style={styles.profileInfo}>
                 <View style={styles.profileBadge}>
@@ -202,7 +202,7 @@ export default function HomeScreen() {
         )}
 
         {/* Weekly Progress */}
-        <ThemedView style={styles.progressCard} lightColor="#FFFFFF" darkColor="#252A32">
+        <ThemedView style={styles.progressCard} lightColor="#FFFFFF" darkColor="#FFFFFF">
           <View style={styles.progressHeader}>
             <Text style={styles.progressTitle}>This Week's Progress</Text>
             <Text style={styles.progressValue}>{stats.weeklyProgress}/5</Text>
@@ -227,13 +227,13 @@ export default function HomeScreen() {
         </ThemedView>
 
         {/* Quick Actions */}
-        <ThemedView style={styles.quickActionsCard} lightColor="#FFFFFF" darkColor="#252A32">
+        <ThemedView style={styles.quickActionsCard} lightColor="#FFFFFF" darkColor="#FFFFFF">
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           
           <View style={styles.actionsGrid}>
             <TouchableOpacity 
               style={[styles.actionCard, styles.primaryAction]}
-              onPress={() => router.push('/(tabs)/ai-chat')}
+              onPress={() => router.push('/(tabs)/test')}
               activeOpacity={0.8}
             >
               <View style={styles.primaryActionContent}>
@@ -268,7 +268,7 @@ export default function HomeScreen() {
 
         {/* Recent Activity */}
         {recentActivity.length > 0 && (
-          <ThemedView style={styles.recentActivityCard} lightColor="#FFFFFF" darkColor="#252A32">
+          <ThemedView style={styles.recentActivityCard} lightColor="#FFFFFF" darkColor="#FFFFFF">
             <View style={styles.recentActivityHeader}>
               <Text style={styles.sectionTitle}>Recent Activity</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/test')}>

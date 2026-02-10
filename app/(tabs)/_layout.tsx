@@ -4,10 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function TabsLayout() {
-  const backgroundColor = useThemeColor({}, 'tabBackground');
-  const borderColor = useThemeColor({}, 'tabBorder');
-  const iconDefault = useThemeColor({}, 'tabIconDefault');
-  const iconSelected = useThemeColor({}, 'tabIconSelected');
+  // Force light theme colors for tab bar to match mobile appearance
+  const backgroundColor = useThemeColor({ light: '#FFFFFF', dark: '#FFFFFF' }, 'tabBackground');
+  const borderColor = useThemeColor({ light: '#E1E8ED', dark: '#E1E8ED' }, 'tabBorder');
+  const iconDefault = useThemeColor({ light: '#8B9DC3', dark: '#8B9DC3' }, 'tabIconDefault');
+  const iconSelected = useThemeColor({ light: '#2C3E50', dark: '#2C3E50' }, 'tabIconSelected');
 
   return (
     <Tabs
@@ -51,6 +52,15 @@ export default function TabsLayout() {
           title: 'AI Chat',
           tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="activities"
+        options={{
+          title: 'Activities',
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+            <Ionicons name="grid-outline" size={size} color={color} />
           ),
         }}
       />
