@@ -454,7 +454,7 @@ Some suggestions:
           <ThemedText style={styles.headerSubtitle}>
             {currentStudent ? 
               `Age ${currentStudent.age} • ${Object.entries(currentStudent.supportLevels || {}).map(([domain, level]) => `${domain}: ${level}`).slice(0, 2).join(', ')}` :
-              'Powered by Your Trained Model'
+              'Powered by Trained Model'
             }
           </ThemedText>
         </View>

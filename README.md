@@ -1,236 +1,208 @@
-# Teach Smart
+# TeachSmart AI - Autism Education Assistant
 
-AI-powered educational resource generator for autism-friendly learning materials.
+An AI-powered educational resource generator designed specifically for autism spectrum learners, built with React Native and Expo.
 
-## Overview
+## 🤖 How to Communicate with the AI Chatbot
 
-Teach Smart transforms AET (Autism Education Trust) targets into personalized, classroom-ready learning resources. The app is designed specifically for teachers working with students with autism, providing autism-friendly materials that require minimal modification.
+### Getting Started with the AI Chat
 
-## Features
+The AI chatbot is your intelligent teaching assistant that can help create personalized educational resources for students with autism. Here's how to effectively communicate with it:
 
-### 🎯 Core Functionality
-- **AI Resource Generation**: Convert AET targets into age-appropriate learning materials
-- **Autism-Friendly Design**: Clear structure, predictable layouts, low cognitive load
-- **Multiple Formats**: Worksheets, activity cards, presentation slides, checklists
-- **Differentiation**: Simplified and extension versions for different ability levels
-- **Full Editability**: In-app editor for customizing generated content
+### 1. **Accessing the Chatbot**
 
-### 📱 User Experience
-- **3-Step Wizard**: Simple resource creation process
-- **Professional Interface**: Clean, teacher-focused design
-- **Export Options**: PDF, DOCX, and native sharing
-- **Resource Library**: Save, organize, and manage created resources
-- **Offline Support**: Local storage for resources and settings
+- Open the app and navigate to the **"AI Chat"** tab
+- The chatbot will greet you with an introduction and available capabilities
+- If you're coming from a student profile, the chatbot will have context about that specific student
 
-### 🧠 AI Integration
-- **Smart Content Generation**: Contextual resource creation based on student parameters
-- **AET Alignment**: Content specifically aligned to Autism Education Trust targets
-- **Customization**: Adapts to student age, ability level, and learning context
-- **Quality Assurance**: Built-in autism-friendly content validation
+### 2. **Types of Conversations**
 
-## Technical Stack
+#### **General Teaching Support**
+Ask questions like:
+- "How do I teach turn-taking to a 7-year-old with autism?"
+- "What are some visual supports for daily routines?"
+- "Create a lesson plan for emotion recognition"
+- "Give me behavior management strategies"
 
-- **Frontend**: React Native with Expo SDK 54
-- **Navigation**: Expo Router with TypeScript
-- **Storage**: AsyncStorage for offline functionality
-- **AI Integration**: Modular service architecture (ready for OpenAI, Claude, etc.)
-- **Export**: Native sharing with PDF/DOCX generation capabilities
-- **Styling**: Autism-friendly design system with consistent theming
+#### **Student-Specific Resources**
+When accessed from a student profile, you can ask:
+- "Create a lesson plan for this student"
+- "What teaching strategies work best for their profile?"
+- "Generate activities for their learning style"
+- "Help with behavior management for this student"
 
-## Database
+#### **AET Target Development**
+- "Suggest AET targets for communication skills"
+- "Create activities for social interaction goals"
+- "Help with independence skill development"
 
-Teach Smart uses **Enhanced AsyncStorage** - completely free and works everywhere!
+### 3. **Communication Tips for Best Results**
 
-### Features:
-- ✅ **100% Free** - No costs, no subscriptions, no limits
-- ✅ **Works Everywhere** - iOS, Android, Web - no compatibility issues
-- ✅ **Local Storage** - All data stays on your device for privacy
-- ✅ **Advanced Features** - Search, filtering, sorting, statistics
-- ✅ **Reliable** - Built on React Native's AsyncStorage
-- ✅ **Fast** - Optimized for mobile performance
+#### **Be Specific**
+✅ **Good**: "Create a visual schedule for a 6-year-old with autism who struggles with transitions"
+❌ **Avoid**: "Help with schedules"
 
-### Enhanced Capabilities:
-- **Smart Search**: Full-text search across all resource content
-- **Advanced Filtering**: Filter by format, age group, ability level, date
-- **Flexible Sorting**: Sort by title, date, age, format, last accessed
-- **Rich Metadata**: Tracks creation date, last accessed, download count
-- **Statistics**: Comprehensive analytics and usage insights
-- **User Settings**: Persistent preferences and configuration
-- **Data Export**: Backup and restore functionality
+#### **Provide Context**
+✅ **Good**: "My student is 8 years old, has difficulty with peer interaction, and learns best with visual supports"
+❌ **Avoid**: "Help with social skills"
 
-### Benefits:
-- **Privacy**: All data remains local to your device
-- **Offline**: Works completely offline
-- **Performance**: Fast queries and data retrieval
-- **Scalable**: Can handle thousands of resources
-- **Cross-Platform**: Same experience on all devices
-- **No Setup**: Works immediately, no configuration needed
+#### **Ask Follow-up Questions**
+- "Can you make this simpler for a younger child?"
+- "Add more visual elements to this activity"
+- "How do I adapt this for a student with sensory sensitivities?"
 
-The database is automatically initialized when you first use the app!
+### 4. **What the Chatbot Can Help With**
 
-## Getting Started
+#### **Educational Resources**
+- Lesson plans and activities
+- Visual supports and schedules
+- Assessment tools
+- Differentiated materials
 
-### Prerequisites
-- Node.js 18+ 
-- Expo CLI
-- iOS Simulator or Android Emulator (for testing)
+#### **Teaching Strategies**
+- Autism-friendly approaches
+- Sensory considerations
+- Communication techniques
+- Behavior support methods
 
-### Installation
+#### **AET Framework Support**
+- Target identification
+- Progress tracking ideas
+- Evidence collection methods
+- Outcome measurement
 
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd teach-smart
-```
+#### **Classroom Management**
+- Environmental modifications
+- Routine establishment
+- Transition strategies
+- Crisis prevention
 
-2. Install dependencies
-```bash
-npm install
-```
+### 5. **Sample Conversation Starters**
 
-3. Start the development server
-```bash
-npx expo start
-```
+#### **For New Teachers**
+- "I'm new to teaching students with autism. Where should I start?"
+- "What are the most important things to know about autism in the classroom?"
 
-4. Run on your preferred platform
-- Press `i` for iOS simulator
-- Press `a` for Android emulator  
-- Press `w` for web browser
-- Scan QR code with Expo Go app for physical device
+#### **For Specific Challenges**
+- "My student has meltdowns during transitions. How can I help?"
+- "How do I teach math concepts to a visual learner with autism?"
+- "What's the best way to encourage peer interaction?"
 
-## Project Structure
+#### **For Resource Creation**
+- "Create a social story about sharing toys"
+- "Design a visual schedule for morning routines"
+- "Make a worksheet for identifying emotions"
 
-```
-teach-smart/
-├── app/                    # App screens and navigation
-│   ├── (tabs)/            # Main tab navigation
-│   └── bar/               # Secondary screens
-├── components/            # Reusable UI components
-│   ├── ResourceEditor.tsx # Content editor component
-│   ├── ThemedText.tsx     # Themed text component
-│   └── ThemedView.tsx     # Themed view component
-├── services/              # Business logic services
-│   ├── aiService.js       # AI resource generation
-│   ├── exportService.js   # Export functionality
-│   └── storageService.js  # Local data management
-├── assets/               # Images and static files
-├── constants/            # App constants and themes
-└── hooks/               # Custom React hooks
-```
+### 6. **Understanding AI Responses**
 
-## Key Services
+#### **Response Format**
+The chatbot provides:
+- **Structured answers** with clear headings
+- **Step-by-step instructions** when appropriate
+- **Teacher implementation notes**
+- **Success criteria** for activities
+- **Adaptation suggestions** for different needs
 
-### AI Service (`services/aiService.js`)
-- Generates educational content from AET targets
-- Customizes content based on student parameters
-- Provides autism-friendly content structure
-- Ready for integration with AI APIs
+#### **Export Options**
+For substantial responses, you can:
+- **Export to PDF** for printing and sharing
+- **Export to Word** for editing and customization
+- Look for the "Export" button on AI responses
 
-### Export Service (`services/exportService.js`)
-- Handles PDF and DOCX export functionality
-- Native sharing integration
-- Export history tracking
-- Format conversion utilities
+### 7. **Advanced Features**
 
-### Storage Service (`services/storageService.js`)
-- Local resource management with AsyncStorage
-- Search and filtering capabilities
-- User settings and preferences
-- Resource statistics and analytics
+#### **Student Context Integration**
+When chatting from a student profile, the AI knows:
+- Student's age and support levels
+- Learning preferences and modalities
+- Communication style and abilities
+- Previous conversation history
 
-## Usage
+#### **Conversation History**
+- All conversations are automatically saved
+- Access previous chats from student profiles
+- Review and build upon past discussions
 
-### Creating a Resource
+### 8. **Technical Communication**
 
-1. **Student Information**: Enter student age, ability level, and learning context
-2. **AET Target Selection**: Choose from comprehensive AET target library
-3. **Resource Preferences**: Select format, visual support options, and text complexity
-4. **AI Generation**: System creates autism-friendly content in ~2 seconds
-5. **Edit & Customize**: Use in-app editor to personalize content
-6. **Export & Share**: Download as PDF/DOCX or share directly
+#### **Server Connection**
+The chatbot uses two AI services in priority order:
+1. **Trained Chatbot Model** (Primary) - Your custom-trained model for autism education
+2. **Azure OpenAI** (Fallback) - Cloud-based AI service when the trained model is unavailable
 
-### Managing Resources
+If neither service is available, the chatbot will provide a clear error message with instructions on how to start your trained model server.
 
-- **Library View**: Browse all created resources with search and filtering
-- **Categories**: Organize by format, age group, and AET target type
-- **Export History**: Track all exported resources with metadata
-- **Settings**: Customize default preferences and app behavior
+#### **Connection Status**
+Check AI service status in the Profile tab to ensure optimal performance.
 
-## Autism-Friendly Design Principles
+### 9. **Best Practices**
 
-- **Clear Visual Hierarchy**: Consistent headings, spacing, and layout
-- **Minimal Cognitive Load**: Simple navigation and predictable interactions
-- **High Contrast**: Accessible color schemes and typography
-- **Structured Content**: Organized information with clear sections
-- **Processing Time**: Appropriate pacing and loading indicators
-- **Choice Making**: Options without overwhelming complexity
+#### **Do:**
+- Be patient - AI responses may take a few seconds
+- Ask for clarification if responses aren't clear
+- Provide feedback on what works or doesn't work
+- Use the export feature for resources you want to keep
 
-## Development
+#### **Don't:**
+- Expect the AI to replace professional judgment
+- Share sensitive student information
+- Rely solely on AI without reviewing content
+- Use responses without adapting to your specific context
 
-### Adding New Features
+### 10. **Troubleshooting Communication Issues**
 
-1. **Services**: Add business logic to appropriate service files
-2. **Components**: Create reusable UI components in `/components`
-3. **Screens**: Add new screens to `/app` directory
-4. **Navigation**: Update tab layout in `app/(tabs)/_layout.tsx`
+#### **If the AI doesn't respond:**
+- Check your internet connection
+- Try rephrasing your question
+- Check the AI service status in Profile tab
 
-### AI Integration
+#### **If responses seem generic:**
+- Provide more specific details about your situation
+- Include student age, ability level, and specific challenges
+- Ask follow-up questions for clarification
 
-The app is designed for easy AI integration:
-
-```javascript
-// Replace mock responses in aiService.js
-async callRealAPI(prompt, params) {
-  const response = await fetch('your-ai-endpoint', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ prompt, ...params })
-  });
-  return response.json();
-}
-```
-
-### Export Integration
-
-Ready for PDF/DOCX library integration:
-
-```javascript
-// Add to exportService.js
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
-
-async generatePDF(content) {
-  const options = {
-    html: this.convertToHTML(content),
-    fileName: 'resource',
-    directory: 'Documents',
-  };
-  return await RNHTMLtoPDF.convert(options);
-}
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- **Autism Education Trust (AET)** for educational frameworks and targets
-- **Special Education Community** for autism-friendly design principles
-- **Teachers and Educators** who provided feedback and requirements
-
-## Support
-
-For support, email support@teachsmart.app or create an issue in the repository.
+#### **If you need immediate help:**
+- Use the clear chat button to start fresh
+- Try simpler, more direct questions
+- Check if the Python server is running (for trained model)
 
 ---
 
-**Teach Smart** - Empowering teachers to create autism-friendly learning materials with AI assistance.
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js and npm
+- Expo CLI
+- Python 3.x (for the trained chatbot server)
+
+### Installation
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the Python server: `cd python-server && ./start_server.sh`
+4. Run the app: `npx expo start`
+
+### Configuration
+- Set up Azure OpenAI credentials in the Profile tab
+- Ensure the Python chatbot server is running for optimal performance
+
+---
+
+## 📱 Features
+
+- **AI-Powered Chat Assistant** - Intelligent conversation with autism education expertise
+- **Student Profile Management** - Track individual student needs and progress
+- **Resource Generation** - Create customized educational materials
+- **Export Capabilities** - Save resources as PDF or Word documents
+- **Conversation History** - Review and build upon previous discussions
+- **Multi-Service AI** - Redundant AI services for reliable performance
+
+## 🎯 Target Users
+
+- Special education teachers
+- Autism specialists
+- Teaching assistants
+- Parents and caregivers
+- Educational therapists
+
+---
+
+*For technical support or questions about the AI chatbot functionality, refer to the troubleshooting section above or check the AI service status in the app.*

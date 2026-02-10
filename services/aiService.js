@@ -52,7 +52,7 @@ class AIResourceGenerator {
 
   /**
    * Generate educational resource based on input parameters
-   * Tries trained chatbot first, then Azure OpenAI, then mock as fallback
+   * Tries trained chatbot first, then Azure OpenAI as fallback
    */
   async generateResource(params) {
     const { studentAge, abilityLevel, aetTarget, learningContext, format, visualSupport, textLevel } = params;
@@ -79,53 +79,41 @@ class AIResourceGenerator {
       }
 
       // Fallback to Azure OpenAI if available
-      let response;
       if (this.client && this.apiKey) {
-        console.log('Using Azure OpenAI...');
-        response = await this.callAzureOpenAI(params);
-      } else {
-        console.log('Azure OpenAI not configured, using mock response');
-        response = await this.mockAPICall(params);
-      }
-      
-      return {
-        success: true,
-        content: response.content,
-        metadata: {
-          generatedAt: new Date().toISOString(),
-          targetAge: studentAge,
-          abilityLevel,
-          format,
-          aetTarget,
-          provider: this.client ? 'Azure OpenAI' : 'Mock'
-        }
-      };
-    } catch (error) {
-      console.error('AI Generation Error:', error);
-      
-      // Final fallback to mock if everything else fails
-      try {
-        console.log('All AI services failed, falling back to mock response');
-        const mockResponse = await this.mockAPICall(params);
+        console.log('🔄 Falling back to Azure OpenAI...');
+        const response = await this.callAzureOpenAI(params);
+        
         return {
           success: true,
-          content: mockResponse.content,
+          content: response.content,
           metadata: {
             generatedAt: new Date().toISOString(),
             targetAge: studentAge,
             abilityLevel,
             format,
             aetTarget,
-            provider: 'Mock (Fallback)'
+            provider: 'Azure OpenAI'
           }
         };
-      } catch (mockError) {
+      } else {
+        // No AI services available
         return {
           success: false,
-          error: 'Failed to generate resource. Please try again.',
+          error: 'AI services are currently unavailable. Please ensure your trained model server is running or configure Azure OpenAI.',
+          fallbackReason: 'No AI services configured',
+          suggestion: 'Start the Python server: cd python-server && ./start_server.sh',
           content: null
         };
       }
+    } catch (error) {
+      console.error('AI Generation Error:', error);
+      
+      return {
+        success: false,
+        error: 'Failed to generate resource. Please check your AI service connections and try again.',
+        details: error.message,
+        content: null
+      };
     }
   }
 
@@ -292,198 +280,6 @@ AUTISM-FRIENDLY PRINCIPLES:
 - Choice-making opportunities
 - Positive reinforcement strategies
 - Clear expectations and boundaries`;
-  }
-
-  /**
-   * Mock API call for demonstration/fallback
-   */
-  async mockAPICall(params) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate dynamic content based on parameters
-    const content = this.generateDynamicContent(params);
-
-    return {
-      content: this.customizeContent(content, params)
-    };
-  }
-
-  /**
-   * Generate dynamic content based on parameters
-   */
-  generateDynamicContent(params) {
-    const { aetTarget, format, studentAge, abilityLevel } = params;
-    
-    // Extract key concepts from AET target
-    const isEmotionTarget = aetTarget.toLowerCase().includes('emotion');
-    const isSocialTarget = aetTarget.toLowerCase().includes('social') || aetTarget.toLowerCase().includes('turn');
-    const isIndependenceTarget = aetTarget.toLowerCase().includes('independence') || aetTarget.toLowerCase().includes('routine');
-    
-    let title = 'Learning Resource';
-    let activities = [];
-    
-    if (isEmotionTarget) {
-      title = 'Emotion Recognition Resource';
-      activities = this.getEmotionActivities(format);
-    } else if (isSocialTarget) {
-      title = 'Social Skills Resource';
-      activities = this.getSocialActivities(format);
-    } else if (isIndependenceTarget) {
-      title = 'Independence Skills Resource';
-      activities = this.getIndependenceActivities(format);
-    } else {
-      title = 'Educational Resource';
-      activities = this.getGeneralActivities(format);
-    }
-
-    return this.formatContent(title, aetTarget, activities, format);
-  }
-
-  getEmotionActivities(format) {
-    if (format === 'cards') {
-      return [
-        'Happy face card with discussion prompts',
-        'Sad face card with coping strategies',
-        'Angry face card with regulation techniques',
-        'Scared face card with comfort strategies'
-      ];
-    } else {
-      return [
-        'Identify emotions in pictures',
-        'Match emotions to situations',
-        'Practice expressing feelings',
-        'Create emotion diary'
-      ];
-    }
-  }
-
-  getSocialActivities(format) {
-    if (format === 'cards') {
-      return [
-        'Turn-taking game cards',
-        'Sharing scenario cards',
-        'Conversation starter cards',
-        'Social rule reminder cards'
-      ];
-    } else {
-      return [
-        'Practice turn-taking rules',
-        'Role-play social situations',
-        'Complete sharing activities',
-        'Learn conversation skills'
-      ];
-    }
-  }
-
-  getIndependenceActivities(format) {
-    if (format === 'cards') {
-      return [
-        'Morning routine cards',
-        'Self-care task cards',
-        'Organization reminder cards',
-        'Problem-solving step cards'
-      ];
-    } else {
-      return [
-        'Follow daily routine checklist',
-        'Practice self-care tasks',
-        'Organize personal items',
-        'Make independent choices'
-      ];
-    }
-  }
-
-  getGeneralActivities(format) {
-    if (format === 'cards') {
-      return [
-        'Learning objective cards',
-        'Activity instruction cards',
-        'Success criteria cards',
-        'Extension activity cards'
-      ];
-    } else {
-      return [
-        'Complete learning activities',
-        'Practice new skills',
-        'Demonstrate understanding',
-        'Apply knowledge'
-      ];
-    }
-  }
-
-  formatContent(title, aetTarget, activities, format) {
-    const activitiesText = activities.map((activity, index) => 
-      format === 'cards' 
-        ? `### Card ${index + 1}: ${activity}\n**Instructions:** Use this card to support learning\n**Success:** Student engages with activity\n`
-        : `**Activity ${index + 1}:** ${activity}\n`
-    ).join('\n');
-
-    return `# ${title}
-
-## Learning Objective
-${aetTarget}
-
-## Instructions for Teachers
-This resource is designed to support autism-friendly learning. Use clear, simple language and provide visual supports as needed.
-
-## Activities
-${activitiesText}
-
-## Success Criteria
-- Student demonstrates understanding of the target skill
-- Student engages appropriately with activities
-- Student shows progress toward learning objective
-
-## Assessment Notes
-- Observe student's engagement and understanding
-- Note any adaptations needed
-- Record progress toward AET targets
-
-## Extension Activities
-- Adapt activities for different ability levels
-- Create additional practice opportunities
-- Connect to real-world applications
-
-## Sensory Considerations
-- Provide quiet space if needed
-- Allow movement breaks
-- Consider lighting and noise levels
-- Offer sensory tools if helpful`;
-  }
-
-  /**
-   * Customize generated content based on parameters
-   */
-  customizeContent(baseContent, params) {
-    let customized = baseContent;
-    
-    // Adjust for age
-    if (params.studentAge) {
-      customized = customized.replace(/aged \d+-\d+/g, `aged ${params.studentAge}`);
-    }
-
-    // Adjust for ability level
-    if (params.abilityLevel === 'emerging') {
-      customized = customized.replace(/3 out of 4/g, '2 out of 3');
-      customized += '\n\n## Additional Support\n- Use extra visual cues\n- Provide more processing time\n- Offer choices rather than open questions\n- Break tasks into smaller steps';
-    } else if (params.abilityLevel === 'extending') {
-      customized += '\n\n## Challenge Extension\n- Add more complex scenarios\n- Encourage peer teaching\n- Include problem-solving elements\n- Connect to real-world applications';
-    }
-
-    // Add visual support notes if requested
-    if (params.visualSupport) {
-      customized += '\n\n## Visual Support Notes\n- Include picture symbols and icons\n- Use clear, simple illustrations\n- Consider color coding for different concepts\n- Provide visual schedules and checklists';
-    }
-
-    // Add learning context specific notes
-    if (params.learningContext === 'onetoone') {
-      customized += '\n\n## One-to-One Support Notes\n- Allow for individual pacing\n- Provide immediate feedback\n- Adapt activities to specific interests\n- Focus on building confidence';
-    } else if (params.learningContext === 'smallgroup') {
-      customized += '\n\n## Small Group Notes\n- Establish clear group rules\n- Assign specific roles\n- Monitor social interactions\n- Provide group and individual goals';
-    }
-
-    return customized;
   }
 
   /**

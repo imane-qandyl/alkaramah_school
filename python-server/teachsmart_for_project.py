@@ -221,135 +221,131 @@ class TeachSmartChatbot:
         else:
             return f"""# Learning Resource: {aet_target}
 
+**Student Age:** {student_age} years
+**Ability Level:** {ability_level.title()}
+
 ## Learning Objective
 {aet_target}
 
-## Age-Appropriate Activities (Age {student_age}):
+## Implementation Activities:
 
 ### Activity 1: Introduction
-- Clear explanation with visual supports
-- Step-by-step demonstration
-- Practice opportunities
+- Provide clear explanation with visual supports
+- Demonstrate step-by-step process
+- Allow practice opportunities
 
 ### Activity 2: Guided Practice
-- Teacher support available
-- Peer interaction encouraged
-- Multiple ways to show understanding
+- Offer teacher support as needed
+- Encourage appropriate peer interaction
+- Provide multiple ways to demonstrate understanding
 
 ### Activity 3: Independent Practice
-- Student works at own pace
-- Choice in how to demonstrate learning
-- Success criteria clearly defined
+- Allow student to work at individual pace
+- Offer choices in demonstration methods
+- Ensure success criteria are clearly defined
 
-## Differentiation for {ability_level.title()} Level:
-- Provide additional visual supports
-- Break tasks into smaller steps
-- Allow extra processing time
-- Offer multiple response options
+## Assessment Guidelines:
+- Observe student engagement and participation
+- Document progress toward stated objective
+- Note effective strategies for future reference
+- Plan appropriate next steps based on outcomes
 
-## Assessment:
-- Observe student engagement
-- Note progress toward objective
-- Document successful strategies
-- Plan next steps
-
-## Teacher Notes:
-- Maintain predictable routine
-- Use student's interests when possible
-- Provide positive reinforcement
+## Implementation Notes:
+- Maintain consistent, predictable routines
+- Incorporate student interests when possible
+- Provide positive reinforcement regularly
 - Allow for sensory breaks as needed"""
     
     def _meltdown_content(self):
         """Generate meltdown-specific content"""
-        return """# Managing Meltdowns: Autism Support Guide
+        return """# Meltdown Management: Professional Guidelines
 
 ## Understanding Meltdowns
-Meltdowns are not tantrums - they're neurological responses to overwhelming situations.
+Meltdowns are neurological responses to overwhelming situations, distinct from behavioral tantrums.
 
-## Immediate Response Strategy:
+## Immediate Response Protocol:
 
-### 1. Stay Calm
-- Keep your voice low and steady
+### 1. Maintain Calm
+- Use low, steady voice tone
 - Avoid sudden movements
-- Don't take it personally
+- Remain objective and professional
 
 ### 2. Ensure Safety
-- Clear the area of potential hazards
-- Give the student space
-- Remove or reduce triggers if possible
+- Clear potential hazards from area
+- Provide appropriate physical space
+- Remove or reduce environmental triggers
 
 ### 3. Reduce Stimulation
-- Lower lights if possible
-- Reduce noise levels
-- Minimize visual distractions
-- Offer noise-canceling headphones
+- Lower lighting when possible
+- Minimize noise levels
+- Reduce visual distractions
+- Offer noise-reducing equipment if available
 
-## During the Meltdown:
+## During Meltdown:
 
-### DO:
-- Stay nearby but give space
+**Appropriate Actions:**
+- Remain nearby while respecting personal space
 - Use simple, calm language
-- Offer comfort items (weighted blanket, fidget toy)
-- Wait patiently - meltdowns have to run their course
+- Offer comfort items when appropriate
+- Allow natural progression of episode
 
-### DON'T:
-- Try to reason or negotiate
-- Touch without permission
-- Raise your voice
-- Give demands or instructions
+**Actions to Avoid:**
+- Attempting reasoning or negotiation
+- Physical contact without permission
+- Raising voice or showing frustration
+- Making demands or giving instructions
 
-## After the Meltdown:
+## Post-Meltdown Recovery:
 
-### Recovery Phase:
-- Allow time to recover
+- Allow adequate recovery time
 - Offer water or preferred snack
-- Provide quiet space
-- Check in gently: "How are you feeling?"
+- Provide quiet environment
+- Check in appropriately: "How are you feeling?"
 
-## Remember:
-- Meltdowns are communication - the student is overwhelmed
-- Recovery takes time - don't rush back to activities
-- Each student is different - strategies may need adjustment
-- Prevention is better than intervention"""
+## Professional Considerations:
+- Document incidents for pattern analysis
+- Meltdowns indicate communication of overwhelm
+- Recovery requires patience and understanding
+- Individual strategies may require adjustment"""
     
     def _focus_content(self):
         """Generate focus and attention-specific content"""
-        return """# Improving Focus and Attention in Students with Autism
+        return """# Attention and Focus: Educational Strategies
 
 ## Understanding Attention Challenges
-Students with autism may struggle with focus due to sensory processing differences, executive function challenges, and difficulty filtering distractions.
+Students with autism may experience focus difficulties due to sensory processing differences, executive function challenges, and difficulty filtering environmental distractions.
 
 ## Environmental Modifications:
 - Minimize visual clutter and distractions
-- Use consistent seating arrangements
-- Provide quiet work spaces
-- Reduce background noise
-- Use natural lighting when possible
+- Maintain consistent seating arrangements
+- Provide designated quiet work areas
+- Reduce background noise levels
+- Utilize natural lighting when available
 
-## Teaching Strategies:
-- Break tasks into smaller, manageable steps
-- Use visual schedules and timers
-- Provide clear, one-step instructions
+## Instructional Strategies:
+- Break tasks into manageable components
+- Use visual schedules and timing devices
+- Provide clear, single-step instructions
 - Incorporate movement breaks every 15-20 minutes
-- Use student's special interests to maintain engagement
+- Integrate student interests to maintain engagement
 
 ## Attention-Building Activities:
-- Start with 2-3 minute focused activities
+- Begin with 2-3 minute focused activities
 - Use highly preferred activities initially
-- Gradually increase duration as success builds
-- Incorporate fidget tools and sensory supports
+- Gradually increase duration based on success
+- Incorporate appropriate sensory supports
 
-## Behavioral Supports:
-- Teach what 'paying attention' looks like
-- Use positive reinforcement for focused behavior
-- Provide visual cues for attention behaviors
-- Create self-monitoring tools for students
+## Behavioral Support Framework:
+- Define and model attention behaviors
+- Implement positive reinforcement systems
+- Provide visual cues for attention expectations
+- Develop self-monitoring tools for students
 
-## Remember:
-- Attention difficulties are neurological, not behavioral
-- Every student's attention profile is different
-- Consistency and patience are key
-- Small improvements should be celebrated"""
+## Professional Considerations:
+- Attention difficulties have neurological basis
+- Individual attention profiles vary significantly
+- Consistency and patience are essential
+- Acknowledge and celebrate incremental progress"""
     
     def format_resource(self, resource_data):
         """Format the resource for display"""
@@ -359,13 +355,17 @@ Students with autism may struggle with focus due to sensory processing differenc
         content = resource_data.get('content', '')
         metadata = resource_data.get('metadata', {})
         
-        # Add header with metadata
-        formatted = f"""# Generated Learning Resource
+        # Check if this is a mapped activity (already formatted)
+        if metadata.get('format_type') == 'mapped_activity':
+            # Return content as-is since it's already properly formatted
+            return content
+        
+        # Add header with metadata for other types
+        formatted = f"""# Learning Resource
 
 **Created:** {resource_data.get('timestamp', 'Unknown')}
 **Student Age:** {metadata.get('student_age', 'Not specified')}
 **Ability Level:** {metadata.get('ability_level', 'Not specified')}
-**Format:** {metadata.get('format_type', 'Not specified')}
 
 ---
 
@@ -373,7 +373,7 @@ Students with autism may struggle with focus due to sensory processing differenc
 
 ---
 
-*Generated by TeachSmart Trained Model*
+*Generated by TeachSmart AI Model*
 """
         return formatted
     
@@ -431,6 +431,24 @@ Students with autism may struggle with focus due to sensory processing differenc
                         "duration": "1-2 minutes",
                         "level": "immediate support"
                     }
+                },
+                "turn[\\s\\-]?taking|sharing|won't share|grabbing|taking toys|teach turn|how do i teach turn": {
+                    "type": "basic_social_skills",
+                    "activity": {
+                        "name": "Simple Turn-Taking with Timer",
+                        "description": "Very basic turn-taking with highly preferred item and visual timer",
+                        "materials": ["One highly preferred toy/activity", "Visual timer", "Turn-taking cards"],
+                        "steps": [
+                            "Start with just 10-15 seconds per turn",
+                            "Use visual timer that student can see counting down",
+                            "Hold up 'My Turn' card when it's student's turn",
+                            "Hold up 'Your Turn' card when it's adult's turn",
+                            "Immediately give item when timer goes off",
+                            "Celebrate: 'Great waiting!' when student waits"
+                        ],
+                        "duration": "3-5 minutes total",
+                        "level": "immediate support"
+                    }
                 }
             },
             1: {  # Progressing - Needs Continued Support
@@ -469,6 +487,25 @@ Students with autism may struggle with focus due to sensory processing differenc
                         "level": "developing with support"
                     }
                 },
+                "turn[\\s\\-]?taking|sharing|social skills|playing with others|teach turn|how do i teach turn": {
+                    "type": "social_skills_development",
+                    "activity": {
+                        "name": "Turn-Taking with Visual Supports",
+                        "description": "Practice turn-taking with clear visual cues and structured routine",
+                        "materials": ["Preferred activity/toy", "Turn-taking visual cards", "Sand timer (1-2 minutes)", "Social story about turn-taking"],
+                        "steps": [
+                            "Read simple social story about turn-taking first",
+                            "Show 'My Turn' and 'Your Turn' cards clearly",
+                            "Start with 30-second turns using sand timer",
+                            "Model appropriate language: 'My turn now' and 'Your turn next'",
+                            "Practice with adult first, then introduce peer if ready",
+                            "Praise waiting behavior: 'Great job waiting for your turn!'",
+                            "Gradually increase turn length to 1-2 minutes"
+                        ],
+                        "duration": "10-15 minutes",
+                        "level": "developing with support"
+                    }
+                }
             },
             2: {  # Thriving - Ready for Next Level
                 "mandiri|sendiri|bisa sendiri|independent|can do alone": {
@@ -536,6 +573,24 @@ Students with autism may struggle with focus due to sensory processing differenc
                             "Student teaches sorting rule to peer"
                         ],
                         "duration": "15-18 minutes",
+                        "level": "independent challenge"
+                    }
+                },
+                "turn[\\s\\-]?taking|sharing|social skills|peer interaction|group work|teach turn|how do i teach turn": {
+                    "type": "advanced_social_skills",
+                    "activity": {
+                        "name": "Flexible Turn-Taking Leadership",
+                        "description": "Lead turn-taking activities with peers and teach others",
+                        "materials": ["Multiple activities for choice", "Turn-taking rule cards", "Timer options", "Peer group"],
+                        "steps": [
+                            "Student chooses activity and explains rules to peers",
+                            "Student demonstrates appropriate turn-taking language",
+                            "Student helps peers negotiate turn length and order",
+                            "Student models problem-solving when conflicts arise",
+                            "Student leads reflection: 'How did our turn-taking go?'",
+                            "Student teaches turn-taking strategies to younger students"
+                        ],
+                        "duration": "20-25 minutes",
                         "level": "independent challenge"
                     }
                 }
@@ -676,7 +731,9 @@ Students with autism may struggle with focus due to sensory processing differenc
         activity_keywords = [
             'activities', 'activity', 'kegiatan', 'latihan',
             'what can i do', 'how can i help', 'suggestions',
-            'ideas', 'strategies', 'exercises'
+            'ideas', 'strategies', 'exercises',
+            'how do i teach', 'how to teach', 'teaching',
+            'turn-taking', 'turn taking', 'sharing', 'social skills'
         ]
         target_lower = aet_target.lower()
         return any(keyword in target_lower for keyword in activity_keywords)
@@ -779,127 +836,63 @@ Students with autism may struggle with focus due to sensory processing differenc
         return self._generate_rule_based_activities(aet_target, student_age, ability_level, interests)
     
     def _format_mapped_activity_response(self, activity, prediction_result, aet_target, student_age, ability_level):
-        """Format the mapped activity as a complete learning resource with enhanced design"""
+        """Format the mapped activity as a complete learning resource with professional design"""
         
-        content = f"""# 🎯 Learning Activity: {aet_target}
+        content = f"""# Learning Resource: {aet_target}
 
-**📅 Created:** {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
-**👤 Student Age:** {student_age} years old
-**📊 Ability Level:** {ability_level.title()}
-**🤖 Format:** AI-Generated Specific Activity
+**Student Age:** {student_age} years
+**Ability Level:** {ability_level.title()}
+**Duration:** {activity['duration']}
 
----
+## Recommended Activity: {activity['name']}
 
-## 🎯 Learning Objective
-{aet_target}
+**Description:** {activity['description']}
 
----
-
-## ⭐ Recommended Activity: {activity['name']}
-
-**📝 Description:** {activity['description']}
-
-**🎨 Activity Type:** {activity.get('type', 'general').replace('_', ' ').title()}
-**📈 Recommended Level:** {activity['level'].title()}
-**⏰ Duration:** {activity['duration']}
-
----
-
-### 🧰 Materials Needed:
+### Materials Required:
 """
         
         for i, material in enumerate(activity['materials'], 1):
             content += f"{i}. {material}\n"
         
         content += f"""
----
-
-### 📋 Step-by-Step Instructions:
+### Implementation Steps:
 """
         
         for i, step in enumerate(activity['steps'], 1):
-            content += f"**Step {i}:** {step}\n\n"
+            content += f"{i}. {step}\n"
         
         # Add personalization notes if available
         if activity.get('personalization'):
-            content += f"""---
-
-### 🎨 Personalization Notes:
+            content += f"""
+### Personalization Notes:
 • {activity['personalization']}
 """
         
-        if activity.get('age_note'):
-            content += f"• {activity['age_note']}\n"
-        
         content += f"""
----
+### Assessment Criteria:
+• Student demonstrates engagement and participation
+• Student follows instructions with appropriate support level
+• Student shows progress toward learning objective
+• Student maintains appropriate emotional regulation
 
-## 🔄 Differentiation Strategies:
+### Differentiation Options:
 
-### 🌱 For Emerging Level:
-• Break into smaller, more manageable steps
-• Provide additional physical guidance and support
-• Use more visual cues and demonstrations
-• Allow extra processing time
+**For Emerging Level:**
+• Provide additional visual supports and physical guidance
+• Break tasks into smaller steps with extended processing time
 
-### 📈 For Developing Level:
-• Use visual supports and verbal prompts as shown above
-• Provide moderate guidance with gradual independence
-• Encourage self-correction with gentle prompts
+**For Developing Level:**
+• Use visual supports with moderate guidance
+• Encourage gradual independence with gentle prompts
 
-### 🚀 For Extending Level:
-• Add complexity or additional challenges
-• Have student teach the activity to others
-• Encourage creative variations and problem-solving
+**For Extending Level:**
+• Add complexity and encourage peer teaching
+• Include problem-solving and creative variations
 
----
-
-## 📊 Assessment Indicators:
-
-✅ **Engagement:** Student shows interest and participates willingly
-✅ **Following Instructions:** Ability to follow steps with appropriate support level
-✅ **Skill Development:** Progress toward the learning objective
-✅ **Emotional Regulation:** Maintains calm and positive demeanor during activity
-✅ **Independence:** Shows increasing ability to complete tasks with less support
-
----
-
-## 🔄 Next Steps:
-
-1. **Repeat & Reinforce:** Practice the activity with slight variations to build mastery
-2. **Gradual Independence:** Slowly reduce support as student becomes more confident
-3. **Document Success:** Note what works best for future planning and consistency
-4. **Expand Skills:** Build on this foundation with related activities
-
----
-
-## 🤖 AI Model Insights
-
-**🎯 Predicted Student Condition:** {prediction_result['condition']}
-**📊 Confidence Level:** {prediction_result['confidence']:.1%}
-
-**💡 Model Recommendation:** 
-{prediction_result['advice']}
-
-**📈 Assessment Probabilities:**
-• 🔴 Struggling: {prediction_result['probabilities']['struggling']:.1%}
-• 🟡 Needs Support: {prediction_result['probabilities']['needs_support']:.1%}  
-• 🟢 Doing Well: {prediction_result['probabilities']['doing_well']:.1%}
-
-**🔍 Activity Selection Logic:** 
-This specific activity was selected based on keywords "{activity.get('matched_keywords', 'default')}" and prediction label {activity.get('prediction_label', 'unknown')}, ensuring it matches your student's current needs and abilities.
-
----
-
-## 📚 About This Resource
-
-*This personalized learning activity was generated by your **TeachSmart Trained AI Model** using evidence-based activity mapping combined with autism therapy prediction algorithms. The activity is designed to be immediately implementable in your classroom or therapy setting.*
-
-**🎓 TeachSmart AI** - Empowering educators with personalized, autism-friendly teaching resources
-
----
-
-*Generated on {datetime.now().strftime('%B %d, %Y')} | For educational use*"""
+### AI Model Assessment:
+**Predicted Condition:** {prediction_result['condition']}
+**Confidence:** {prediction_result['confidence']:.0%}
+**Recommendation:** {prediction_result['advice']}"""
         
         return content
     
@@ -952,6 +945,29 @@ This specific activity was selected based on keywords "{activity.get('matched_ke
                 'value_3': 'benar',
                 'activity_note': 'anak tantrum dan tidak bisa konsentrasi'
             }
+        elif any(word in target_lower for word in ['turn-taking', 'turn taking', 'sharing', 'social skills', 'peer interaction']):
+            # Specific handling for turn-taking and social skills
+            if ability_level == 'emerging':
+                return {
+                    'value_1': 'salah',
+                    'value_2': 'salah',
+                    'value_3': 'benar',
+                    'activity_note': 'student needs help with turn-taking and sharing activities'
+                }
+            elif ability_level == 'extending':
+                return {
+                    'value_1': 'benar',
+                    'value_2': 'benar',
+                    'value_3': 'benar',
+                    'activity_note': 'student ready for advanced turn-taking and peer interaction challenges'
+                }
+            else:  # developing
+                return {
+                    'value_1': 'benar',
+                    'value_2': 'salah',
+                    'value_3': 'benar',
+                    'activity_note': 'student learning turn-taking with visual supports and sharing activities'
+                }
         elif any(word in target_lower for word in ['help', 'support', 'assistance', 'bantu']):
             return {
                 'value_1': 'benar',
