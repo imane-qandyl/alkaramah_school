@@ -227,6 +227,17 @@ export default function ResourceLibraryScreen() {
   };
 
   const handleDeleteResource = async (resourceId: string) => {
+    
+    // Check if it's a template resource
+    if (resourceId.startsWith('template_')) {
+      Alert.alert(
+        'Cannot Delete Template',
+        'Template resources cannot be deleted as they are built-in resources. You can create a copy and modify it instead.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     Alert.alert(
       'Delete Resource',
       'Are you sure you want to delete this resource? This action cannot be undone.',
@@ -237,10 +248,22 @@ export default function ResourceLibraryScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await storageService.deleteResource(resourceId);
-              await loadResources();
-              Alert.alert('Success', 'Resource deleted successfully');
+              console.log('🔄 Calling enhancedResourceService.deleteResource with:', resourceId);
+              
+              // Use enhanced resource service which handles different resource types
+              const result = await enhancedResourceService.deleteResource(resourceId);
+              
+              console.log('📊 Delete result:', result);
+              
+              if (result.success) {
+                await loadResources();
+                Alert.alert('Success', 'Resource deleted successfully');
+              } else {
+                console.error('❌ Delete failed:', result.error);
+                Alert.alert('Cannot Delete', result.error || 'Failed to delete resource');
+              }
             } catch (error) {
+              console.error('❌ Delete error:', error);
               Alert.alert('Error', 'Failed to delete resource');
             }
           }
@@ -248,6 +271,8 @@ export default function ResourceLibraryScreen() {
       ]
     );
   };
+
+
 
   const handleShareResource = async (resource: Resource) => {
     try {
@@ -520,6 +545,8 @@ export default function ResourceLibraryScreen() {
             <Ionicons name="folder-outline" size={20} color="#2C3E50" />
             <ThemedText style={styles.actionText}>Organize</ThemedText>
           </TouchableOpacity>
+          
+
         </ThemedView>
       )}
 

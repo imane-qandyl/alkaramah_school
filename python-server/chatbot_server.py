@@ -158,35 +158,7 @@ if FLASK_AVAILABLE:
                 'error': f'Server error: {str(e)}'
             }), 500
 
-    @app.route('/test-connection', methods=['GET'])
-    def test_connection():
-        """Test the chatbot connection"""
-        try:
-            if chatbot is None:
-                return jsonify({
-                    'success': False,
-                    'error': 'Chatbot model not loaded'
-                })
 
-            # Test with a simple resource generation
-            test_resource = chatbot.generate_learning_resource(
-                student_age=7,
-                aet_target="Test connection",
-                context="Test environment"
-            )
-
-            return jsonify({
-                'success': True,
-                'message': 'Trained chatbot model is working correctly',
-                'model': 'Teach Smart Trained Model',
-                'test_result': test_resource.get('success', False)
-            })
-
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': f'Connection test failed: {str(e)}'
-            })
 
     @app.route('/predict-student', methods=['POST'])
     def predict_student():
@@ -282,7 +254,7 @@ def main():
         logger.info("Starting Teach Smart Chatbot Server...")
         print("🚀 Server starting on http://localhost:5001")
         print("📱 React Native app can now connect to your trained model!")
-        app.run(host='0.0.0.0', port=5001, debug=True)
+        app.run(host='0.0.0.0', port=5001, debug=False)
         return 0
     else:
         logger.error("Failed to start server: Could not load chatbot model")

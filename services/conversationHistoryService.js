@@ -219,6 +219,40 @@ class ConversationHistoryService {
   }
 
   /**
+   * Delete a specific conversation for a student
+   */
+  async deleteConversation(studentId, conversationId) {
+    try {
+      console.log(`🗑️ Attempting to delete conversation ${conversationId} for student ${studentId}`);
+      const history = await this.getStudentHistory(studentId);
+      console.log(`📚 Student has ${history.length} conversations before deletion`);
+      
+      // Convert conversationId to number if it's a string
+      const targetId = typeof conversationId === 'string' ? parseInt(conversationId) : conversationId;
+      
+      const filteredHistory = history.filter(conv => {
+        const convId = typeof conv.id === 'string' ? parseInt(conv.id) : conv.id;
+        return convId !== targetId;
+      });
+      
+      console.log(`📚 Student will have ${filteredHistory.length} conversations after deletion`);
+      
+      if (filteredHistory.length === history.length) {
+        console.log(`❌ Conversation ${conversationId} not found in student ${studentId} history`);
+        return { success: false, error: 'Conversation not found' };
+      }
+      
+      await this.saveStudentHistory(studentId, filteredHistory);
+      console.log(`✅ Successfully deleted conversation ${conversationId} for student ${studentId}`);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Clear conversation history for a student
    */
   async clearStudentHistory(studentId) {
@@ -253,86 +287,6 @@ class ConversationHistoryService {
     }
   }
 
-  /**
-   * Debug function to check storage status
-   */
-  async debugStorageStatus() {
-    try {
-      console.log('🔍 DEBUG: Checking conversation history storage...');
-      
-      const allHistory = await AsyncStorage.getItem(this.storageKey);
-      if (!allHistory) {
-        console.log('📝 No conversation history found in storage');
-        return { totalStudents: 0, totalConversations: 0, students: [] };
-      }
-
-      const historyData = JSON.parse(allHistory);
-      const students = Object.keys(historyData);
-      const totalConversations = students.reduce((total, studentId) => {
-        return total + historyData[studentId].length;
-      }, 0);
-
-      console.log(`📊 Storage Status:`);
-      console.log(`   - Total students with history: ${students.length}`);
-      console.log(`   - Total conversations: ${totalConversations}`);
-      
-      students.forEach(studentId => {
-        const count = historyData[studentId].length;
-        const lastConv = historyData[studentId][count - 1];
-        console.log(`   - ${studentId}: ${count} conversations (last: ${lastConv?.timestamp})`);
-      });
-
-      return {
-        totalStudents: students.length,
-        totalConversations,
-        students: students.map(studentId => ({
-          studentId,
-          count: historyData[studentId].length,
-          lastConversation: historyData[studentId][historyData[studentId].length - 1]?.timestamp
-        }))
-      };
-    } catch (error) {
-      console.error('❌ Error checking storage status:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Force save a test conversation (for debugging)
-   */
-  async saveTestConversation(studentId, studentName = 'Test Student') {
-    try {
-      console.log(`🧪 Saving test conversation for ${studentId}`);
-      
-      const testConversation = {
-        userMessage: 'Test question about focus',
-        aiResponse: 'Test AI response with detailed focus strategies...',
-        studentContext: {
-          id: studentId,
-          name: studentName,
-          age: 8
-        },
-        metadata: {
-          provider: 'Test',
-          timestamp: new Date().toISOString(),
-          studentName: studentName,
-          studentAge: 8
-        }
-      };
-
-      const result = await this.saveConversation(studentId, testConversation);
-      if (result) {
-        console.log(`✅ Test conversation saved successfully for ${studentId}`);
-        return true;
-      } else {
-        console.log(`❌ Test conversation failed to save for ${studentId}`);
-        return false;
-      }
-    } catch (error) {
-      console.error(`❌ Error saving test conversation for ${studentId}:`, error);
-      return false;
-    }
-  }
 }
 
 // Export singleton instance

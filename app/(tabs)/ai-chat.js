@@ -74,7 +74,6 @@ Some suggestions:
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [debugMode, setDebugMode] = useState(false);
   const [allowInputFocus, setAllowInputFocus] = useState(false);
   const [exportingMessageId, setExportingMessageId] = useState(null);
 
@@ -343,38 +342,7 @@ Some suggestions:
     );
   };
 
-  const debugConversationHistory = async () => {
-    try {
-      console.log('🔍 Starting conversation history debug...');
-      
-      // Check storage status
-      const status = await conversationHistoryService.debugStorageStatus();
-      console.log('📊 Storage status:', status);
-      
-      if (currentStudent) {
-        // Get current student's history
-        const studentHistory = await conversationHistoryService.getStudentHistory(currentStudent.id);
-        console.log(`📚 ${currentStudent.name} has ${studentHistory.length} conversations`);
-        
-        // Test save a conversation
-        const testResult = await conversationHistoryService.saveTestConversation(
-          currentStudent.id, 
-          currentStudent.name
-        );
-        console.log(`🧪 Test save result: ${testResult}`);
-        
-        Alert.alert(
-          'Debug Info',
-          `Student: ${currentStudent.name}\nConversations: ${studentHistory.length}\nTest Save: ${testResult ? 'Success' : 'Failed'}\n\nCheck console for details`
-        );
-      } else {
-        Alert.alert('Debug Info', 'No student context available\n\nCheck console for storage status');
-      }
-    } catch (error) {
-      console.error('❌ Debug error:', error);
-      Alert.alert('Debug Error', error.message);
-    }
-  };
+
 
   const formatTime = (timestamp) => {
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -472,17 +440,6 @@ Some suggestions:
         <TouchableOpacity onPress={clearChat} style={styles.clearButton}>
           <Ionicons name="trash-outline" size={20} color="#666" />
         </TouchableOpacity>
-        
-        {/* Debug button - long press to enable */}
-        <TouchableOpacity 
-          onLongPress={() => {
-            setDebugMode(!debugMode);
-            Alert.alert('Debug Mode', debugMode ? 'Disabled' : 'Enabled');
-          }}
-          style={styles.debugButton}
-        >
-          <Ionicons name="bug-outline" size={16} color="#999" />
-        </TouchableOpacity>
       </ThemedView>
 
       {/* Messages Container with proper keyboard handling */}
@@ -565,27 +522,6 @@ Some suggestions:
               <ActivityIndicator size="small" color="#2C3E50" />
               <Text style={styles.loadingText}>AI is thinking...</Text>
             </View>
-          </View>
-        )}
-        
-        {/* Debug Panel */}
-        {debugMode && (
-          <View style={styles.debugPanel}>
-            <Text style={styles.debugTitle}>🔧 Debug Panel</Text>
-            <TouchableOpacity 
-              style={styles.debugAction}
-              onPress={debugConversationHistory}
-            >
-              <Text style={styles.debugActionText}>Check Conversation History</Text>
-            </TouchableOpacity>
-            {currentStudent && (
-              <TouchableOpacity 
-                style={styles.debugAction}
-                onPress={() => router.push(`/conversation-history/${currentStudent.id}`)}
-              >
-                <Text style={styles.debugActionText}>View {currentStudent.name}'s History</Text>
-              </TouchableOpacity>
-            )}
           </View>
         )}
         </ScrollView>
@@ -847,36 +783,5 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: '#E1E8ED',
-  },
-  debugButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  debugPanel: {
-    backgroundColor: '#FFF3CD',
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FFEAA7',
-  },
-  debugTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#856404',
-    marginBottom: 12,
-  },
-  debugAction: {
-    backgroundColor: '#FFF',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#FFEAA7',
-  },
-  debugActionText: {
-    color: '#856404',
-    fontWeight: '500',
-    textAlign: 'center',
   },
 });

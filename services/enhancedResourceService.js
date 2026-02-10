@@ -277,8 +277,88 @@ Meltdowns are neurological responses to overwhelming situations, not behavioral 
   }
 
   /**
-   * Create a manual resource
+   * Delete a resource
    */
+  async deleteResource(resourceId) {
+    try {
+      console.log(`🔄 Attempting to delete resource: ${resourceId}`);
+      
+      // Check if it's an AI-generated resource (starts with 'ai_')
+      if (resourceId.startsWith('ai_')) {
+        console.log('📱 Detected AI-generated resource');
+        const conversationId = resourceId.replace('ai_', '');
+        console.log(`🔍 Looking for conversation ID: ${conversationId}`);
+        
+        // Get all students with history to find the conversation
+        const studentsWithHistory = await conversationHistoryService.getStudentsWithHistory();
+        console.log(`👥 Found ${studentsWithHistory.length} students with history`);
+        
+        for (const student of studentsWithHistory) {
+          console.log(`🔍 Checking student: ${student.studentId}`);
+          const conversations = await conversationHistoryService.getStudentHistory(student.studentId);
+          console.log(`📚 Student has ${conversations.length} conversations`);
+          
+          // Try both string and number comparison
+          const conversation = conversations.find(conv => 
+            conv.id === conversationId || 
+            conv.id === parseInt(conversationId) ||
+            conv.id.toString() === conversationId
+          );
+          
+          if (conversation) {
+            console.log(`🎯 Found conversation ${conversationId} in student ${student.studentId} history`);
+            const result = await conversationHistoryService.deleteConversation(student.studentId, conversationId);
+            console.log(`🗑️ Delete result:`, result);
+            return result;
+          }
+        }
+        
+        console.log(`❌ Conversation ${conversationId} not found in any student history`);
+        return { success: false, error: 'AI-generated resource not found' };
+      }
+      
+      // Check if it's a template resource
+      if (resourceId.startsWith('template_')) {
+        console.log('📋 Detected template resource');
+        return { success: false, error: 'Template resources cannot be deleted' };
+      }
+      
+      // For manual resources, use the storage service
+      console.log('📝 Detected manual resource');
+      const result = await storageService.deleteResource(resourceId);
+      console.log(`🗑️ Manual delete result:`, result);
+      return result;
+      
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Update a resource
+   */
+  async updateResource(resourceId, updates) {
+    try {
+      // Check if it's an AI-generated resource
+      if (resourceId.startsWith('ai_')) {
+        return { success: false, error: 'AI-generated resources cannot be edited directly. Save as a new resource instead.' };
+      }
+      
+      // Check if it's a template resource
+      if (resourceId.startsWith('template_')) {
+        return { success: false, error: 'Template resources cannot be edited. Create a copy instead.' };
+      }
+      
+      // For manual resources, use the storage service
+      const result = await storageService.updateResource(resourceId, updates);
+      return result;
+      
+    } catch (error) {
+      console.error('Error updating resource:', error);
+      return { success: false, error: error.message };
+    }
+  }
   async createManualResource(resourceData) {
     try {
       const resource = {

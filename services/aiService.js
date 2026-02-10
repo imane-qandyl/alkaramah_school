@@ -18,14 +18,6 @@ class AIResourceGenerator {
     this.apiVersion = config.apiVersion || azureConfig.apiVersion;
     this.deploymentName = config.deploymentName || azureConfig.deploymentName;
     
-    // Debug logging
-    console.log('Azure OpenAI Configuration:');
-    console.log('- Endpoint:', this.endpoint);
-    console.log('- API Version:', this.apiVersion);
-    console.log('- Deployment:', this.deploymentName);
-    console.log('- API Key will be loaded securely');
-    console.log('- Config object:', config);
-    
     // Initialize Azure OpenAI client
     this.client = null;
     this.initializeClient();
@@ -50,9 +42,6 @@ class AIResourceGenerator {
           },
         });
         console.log('Azure OpenAI client initialized successfully');
-        console.log('Base URL:', `${this.endpoint}openai/deployments/${this.deploymentName}`);
-        console.log('API Version:', this.apiVersion);
-        console.log('API Key loaded:', !!this.apiKey);
       } else {
         console.warn('Azure OpenAI API key not provided, using mock responses');
       }
@@ -576,16 +565,13 @@ ${activitiesText}
   }
 
   /**
-   * Get current configuration (for debugging)
+   * Get current configuration status
    */
   getConfiguration() {
     const trainedStatus = trainedChatbotService.getStatus();
     
     return {
       azureOpenAI: {
-        endpoint: this.endpoint,
-        apiVersion: this.apiVersion,
-        deploymentName: this.deploymentName,
         hasApiKey: !!this.apiKey,
         clientInitialized: !!this.client
       },
@@ -610,8 +596,7 @@ ${activitiesText}
       if (!this.client || !this.apiKey) {
         return { 
           success: false, 
-          error: 'Azure OpenAI not configured. Please add your API key to the secure configuration.',
-          config: this.getConfiguration()
+          error: 'Azure OpenAI not configured. Please add your API key to the secure configuration.'
         };
       }
 
@@ -646,7 +631,6 @@ ${activitiesText}
       return { 
         success: false, 
         error: errorMessage,
-        config: this.getConfiguration(),
         fullError: error.message
       };
     }

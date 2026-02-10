@@ -430,7 +430,7 @@ class ExportService {
       .replace(/\*\*(.*?)\*\*/g, '$1')
       .trim();
     
-    return `${title}\n\n📚 Generated with TeachSmart AI - Autism-friendly educational resources\n\n${cleanContent}\n\n🤖 Created by AI-powered teaching assistant`;
+    return `${title}\n\n📚 Generated with TeachSmart AI - Autism-friendly educational resources\n\n${cleanContent}\n\n`;
   }
 
   /**
