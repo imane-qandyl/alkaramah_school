@@ -715,9 +715,23 @@ Some suggestions:
 
   // Download image function
   const handleDownloadImage = async (imageUri, metadata) => {
+    console.log('🔽 Starting image download...');
+    console.log('   Image URI:', imageUri ? `${imageUri.substring(0, 50)}...` : 'null');
+    console.log('   Metadata:', metadata);
+    
     try {
+      // Validate image URI
+      if (!imageUri) {
+        throw new Error('Image URI is required');
+      }
+      
+      console.log('✅ Image URI validation passed');
+
       // Request media library permissions
+      console.log('📋 Requesting MediaLibrary permissions...');
       const { status } = await MediaLibrary.requestPermissionsAsync();
+      console.log(`   Permission status: ${status}`);
+      
       if (status !== 'granted') {
         Alert.alert(
           'Permission Required',
@@ -730,38 +744,164 @@ Some suggestions:
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const action = metadata?.action || 'autism-friendly-image';
-      const filename = `${action.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}.png`;
+      const cleanAction = action.replace(/[^a-zA-Z0-9]/g, '-');
+      const filename = `${cleanAction}-${timestamp}.png`;
+      const fileUri = FileSystem.documentDirectory + filename;
+      
+      console.log('📁 Download details:');
+      console.log(`   Filename: ${filename}`);
+      console.log(`   File URI: ${fileUri}`);
+      console.log(`   Document directory: ${FileSystem.documentDirectory}`);
 
-      // Download the image to a temporary location
-      const downloadResult = await FileSystem.downloadAsync(
-        imageUri,
-        FileSystem.documentDirectory + filename
-      );
-
-      if (downloadResult.status === 200) {
-        // Save to media library
-        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+      // Handle different image URI formats
+      if (imageUri.startsWith('data:image/')) {
+        console.log('📄 Processing data URL...');
         
-        Alert.alert(
-          'Image Saved',
-          'The image has been saved to your photo library!',
-          [
-            { text: 'OK' },
-            { 
-              text: 'Share', 
-              onPress: () => Sharing.shareAsync(downloadResult.uri)
-            }
-          ]
-        );
+        // Extract base64 data from data URL
+        console.log('🔍 Parsing image URI for base64 data...');
+        console.log('   Full URI length:', imageUri.length);
+        console.log('   URI starts with:', imageUri.substring(0, 100));
+        
+        let base64Data;
+        
+        // Handle different data URL formats
+        if (imageUri.includes(',')) {
+          // Standard data URL format: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+          const parts = imageUri.split(',');
+          console.log('   Split parts:', parts.length);
+          console.log('   Header part:', parts[0]);
+          base64Data = parts[1];
+        } else if (imageUri.startsWith('data:image/')) {
+          // Sometimes the data might be directly after the header without comma
+          const headerMatch = imageUri.match(/^data:image\/[^;]+;base64(.*)$/);
+          if (headerMatch) {
+            base64Data = headerMatch[1];
+          }
+        }
+        
+        console.log('   Extracted base64 length:', base64Data ? base64Data.length : 'null');
+        console.log('   Base64 starts with:', base64Data ? base64Data.substring(0, 50) : 'null');
+        
+        if (!base64Data || base64Data.trim().length === 0) {
+          throw new Error('Could not extract base64 data from image URI');
+        }
+        
+        // Clean up the base64 data (remove any whitespace)
+        base64Data = base64Data.trim();
+
+        // Use the new filesystem API to write the file
+        console.log('⬇️ Writing file using new filesystem API...');
+        
+        await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        
+        console.log('📊 File written successfully');
+        
+      } else if (imageUri.startsWith('file://') || imageUri.startsWith('content://') || imageUri.startsWith('blob:')) {
+        console.log('📄 Processing file/content/blob URL...');
+        
+        // For file URIs, blob URLs, or content URIs, try to copy the file
+        await FileSystem.copyAsync({
+          from: imageUri,
+          to: fileUri
+        });
+        
+        console.log('📊 File copied successfully');
+        
       } else {
-        throw new Error('Download failed');
+        console.log('📄 Processing as potential HTTP URL...');
+        
+        // Try to download from HTTP URL (fallback to legacy API for external URLs)
+        try {
+          const { downloadAsync } = require('expo-file-system/legacy');
+          const downloadResult = await downloadAsync(imageUri, fileUri);
+          
+          if (downloadResult.status !== 200) {
+            throw new Error(`Download failed with status: ${downloadResult.status}`);
+          }
+          
+          console.log('📊 File downloaded successfully');
+        } catch (legacyError) {
+          console.log('❌ Legacy download failed, trying as base64...');
+          
+          // Last resort: treat as raw base64 data
+          await FileSystem.writeAsStringAsync(fileUri, imageUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          
+          console.log('📊 File written as raw base64');
+        }
       }
+
+      // Verify the file exists
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      console.log('📄 File info:', fileInfo);
+      
+      if (!fileInfo.exists) {
+        throw new Error('File was not created successfully');
+      }
+      
+      console.log('✅ File creation successful, saving to media library...');
+      
+      // Save to media library
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      console.log('📱 Media library asset created:', asset);
+      
+      Alert.alert(
+        'Image Saved',
+        'The image has been saved to your photo library!',
+        [
+          { text: 'OK' },
+          { 
+            text: 'Share', 
+            onPress: () => {
+              console.log('📤 Sharing image...');
+              Sharing.shareAsync(fileUri).catch(shareError => {
+                console.error('Share error:', shareError);
+              });
+            }
+          }
+        ]
+      );
+      
+      console.log('✅ Image download and save completed successfully!');
+      
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('❌ Download error:', error);
+      console.error('   Error name:', error.name);
+      console.error('   Error message:', error.message);
+      console.error('   Error stack:', error.stack);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Unable to download the image. Please try again.';
+      
+      if (error.message.includes('Permission')) {
+        errorMessage = 'Permission denied. Please check your photo library permissions in Settings.';
+      } else if (error.message.includes('base64')) {
+        errorMessage = 'The image data format is not supported. Please try generating a new image.';
+      } else if (error.message.includes('File was not created')) {
+        errorMessage = 'Unable to save the file. Please check your device storage and try again.';
+      } else if (error.message.includes('extract base64')) {
+        errorMessage = 'The image format is not recognized. Please try generating a new image.';
+      }
+      
       Alert.alert(
         'Download Failed',
-        'Unable to download the image. Please try again.',
-        [{ text: 'OK' }]
+        errorMessage,
+        [
+          { text: 'OK' },
+          {
+            text: 'Debug Info',
+            onPress: () => {
+              Alert.alert(
+                'Debug Information',
+                `Error: ${error.message}\n\nImage URI Type: ${imageUri ? (imageUri.startsWith('data:') ? 'Data URL' : imageUri.startsWith('file:') ? 'File URL' : imageUri.startsWith('blob:') ? 'Blob URL' : 'Other') : 'Missing'}\nMetadata: ${metadata ? 'Present' : 'Missing'}`,
+                [{ text: 'OK' }]
+              );
+            }
+          }
+        ]
       );
     }
   };
