@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "python-server": "cd python-server && python chatbot_server.py",
+    "python-server": "./start-chatbot.sh",
     "test-server": "node scripts/testPythonServer.js",
     "server-status": "node scripts/testPythonServer.js --status",
     "add-sample-data": "node scripts/addSampleData.js",

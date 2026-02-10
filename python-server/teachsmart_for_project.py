@@ -93,6 +93,10 @@ class TeachSmartChatbot:
         Generate learning resource using both trained model insights and educational content
         """
         
+        # Check if this is a simple greeting first
+        if self._is_greeting(aet_target):
+            return self._generate_greeting_response()
+        
         # Simulate processing time
         import time
         time.sleep(1)
@@ -676,6 +680,48 @@ Students with autism may struggle with focus due to sensory processing differenc
         ]
         target_lower = aet_target.lower()
         return any(keyword in target_lower for keyword in activity_keywords)
+    
+    def _is_greeting(self, aet_target):
+        """Check if the input is a simple greeting"""
+        greeting_patterns = [
+            r'^hello\s*[!.?]*$',
+            r'^hi\s*[!.?]*$', 
+            r'^hey\s*[!.?]*$',
+            r'^good morning\s*[!.?]*$',
+            r'^good afternoon\s*[!.?]*$',
+            r'^good evening\s*[!.?]*$',
+            r'^halo\s*[!.?]*$',  # Indonesian greeting
+            r'^hai\s*[!.?]*$',   # Indonesian greeting
+            # Also handle formatted inputs from the chat interface
+            r'^teacher question:\s*(hello|hi|hey|good morning|good afternoon|good evening|halo|hai)\s*[!.?]*$',
+            r'^for student .+:\s*(hello|hi|hey|good morning|good afternoon|good evening|halo|hai)\s*[!.?]*$'
+        ]
+        
+        target_lower = aet_target.lower().strip()
+        return any(re.search(pattern, target_lower, re.IGNORECASE) for pattern in greeting_patterns)
+    
+    def _generate_greeting_response(self):
+        """Generate a simple greeting response"""
+        greeting_responses = [
+            "Hello! How can I assist you today?",
+            "Hi there! I'm here to help you create educational resources for students with autism. What would you like to work on?",
+            "Good day! I'm TeachSmart, your AI assistant for autism-friendly educational content. How can I help you today?",
+            "Hello! I'm ready to help you create personalized learning activities. What's your teaching goal today?",
+            "Hi! I'm here to support you with autism-friendly educational resources. What can I help you with?"
+        ]
+        
+        import random
+        response = random.choice(greeting_responses)
+        
+        return {
+            'success': True,
+            'content': response,
+            'timestamp': datetime.now().isoformat(),
+            'metadata': {
+                'response_type': 'greeting',
+                'provider': 'TeachSmart Trained Model'
+            }
+        }
     
     def _generate_specific_activity_response(self, aet_target, student_age, ability_level, context):
         """Generate specific activity suggestions using activity mapping"""

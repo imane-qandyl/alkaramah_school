@@ -246,13 +246,35 @@ Some suggestions:
   };
 
   const generateAIResponse = async (userInput) => {
+    // Check if this is a simple greeting first
+    const isGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|halo|hai)\s*[!.?]*$/i.test(userInput.trim());
+    
+    if (isGreeting) {
+      // Return a direct greeting response without going through the AI service
+      const greetingResponses = [
+        "Hello! How can I assist you today?",
+        "Hi there! I'm here to help you create educational resources for students with autism. What would you like to work on?",
+        "Good day! I'm TeachSmart, your AI assistant for autism-friendly educational content. How can I help you today?",
+        "Hello! I'm ready to help you create personalized learning activities. What's your teaching goal today?",
+        "Hi! I'm here to support you with autism-friendly educational resources. What can I help you with?"
+      ];
+      
+      const randomResponse = greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
+      
+      if (currentStudent) {
+        return `${randomResponse}\n\nI can see you're working with ${currentStudent.name} (Age: ${currentStudent.age}). I have access to their profile and can create personalized resources for them. What would you like to focus on?`;
+      }
+      
+      return randomResponse;
+    }
+    
     // Create a chat-style prompt for the AI service with student context
     const chatParams = {
       studentAge: currentStudent?.age || 8,
       abilityLevel: currentStudent?.supportLevels?.learning || 'developing',
       aetTarget: currentStudent ? 
         `For student ${currentStudent.name} (${currentStudent.age} years old): ${userInput}` : 
-        `Teacher question: ${userInput}`,
+        userInput, // Don't prefix with "Teacher question:" to let the trained model handle it naturally
       learningContext: currentStudent ? 
         `Student profile: ${JSON.stringify({
           supportLevels: currentStudent.supportLevels,

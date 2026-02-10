@@ -27,5 +27,5 @@ source venv/bin/activate
 echo "📥 Installing requirements..."
 pip install -r requirements.txt
 
-echo "🚀 Starting chatbot server on http://localhost:5000"
+echo "🚀 Starting chatbot server on http://localhost:5001"
 python chatbot_server.py
