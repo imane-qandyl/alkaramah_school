@@ -34,7 +34,7 @@ const getApiKey = async () => {
 };
 
 export const azureConfig = {
-  endpoint: 'https://alkaramah-openai.openai.azure.com/',
+  endpoint: AZURE_OPENAI_ENDPOINT,
   apiVersion: '2024-02-15-preview',
   deploymentName: 'chatbot',
   getApiKey

@@ -35,13 +35,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "azureOpenAI": {
-        "endpoint": "https://alkaramah-openai.openai.azure.com/",
-        "apiVersion": "2024-02-15-preview",
-        "deploymentName": "chatbot"
-      }
     }
   }
 }

@@ -234,7 +234,9 @@ Notes: Layla couldn't wait for her turn with the tablet and grabbed it from her 
 
 Task 1: salah, Task 2: salah, Task 3: benar
 Notes: Student having meltdown, needs calming support
+task 1: wrong, task :2 wrong, task 3: right , note student have meltdown, needs calming support
 
 
 Task 1: benar, Task 2: salah, Task 3: bantu
 Notes: Student shows progress but needs continued visual supports
+Task 1: correct, Task 2: incorrect, Task 3: help Notes: Student shows progress but needs continued visual supports
